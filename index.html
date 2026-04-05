@@ -444,10 +444,11 @@ let pmats={};function gpm(c){
 }
 // Shadow system — solid black circles that shrink with height
 const shadowGeo=new THREE.CircleGeometry(1,16);
-const shadowMatBase=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,depthWrite:false});
+const shadowMatBase=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,depthWrite:false,depthTest:false});
 function makeShadow(){
   let m=new THREE.Mesh(shadowGeo,shadowMatBase.clone());
   m.rotation.x=-Math.PI/2;
+  m.renderOrder=-1;
   scene.add(m);
   return m;
 }
