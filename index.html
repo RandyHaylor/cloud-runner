@@ -72,18 +72,23 @@ function hideOverlay(){overlayMsg=null}
 function drawOverlay(){
   ox.clearRect(0,0,GW,GH);
   if(!overlayMsg) return;
-  let pulse=0.6+Math.sin(S.frame*0.06)*0.4;
-  let size=Math.round(18+Math.sin(S.frame*0.04)*3);
+  let t=performance.now()*0.001;
+  let pulse=0.6+Math.sin(t*2)*0.4;
+  let scale=1+Math.sin(t*1.5)*0.08;
   ox.save();
   ox.globalAlpha=pulse;
   ox.fillStyle=overlayMsg.color;
-  ox.font='bold '+size+'px monospace';
   ox.textAlign='center';
   ox.shadowColor='#4ecdc4';
   ox.shadowBlur=15;
+  let baseSize=18;
   let startY=GH*0.33;
+  ox.translate(GW/2,startY);
+  ox.scale(scale,scale);
+  ox.translate(-GW/2,-startY);
+  ox.font='bold '+baseSize+'px monospace';
   for(let i=0;i<overlayMsg.lines.length;i++){
-    ox.fillText(overlayMsg.lines[i],GW/2,startY+i*(size+10));
+    ox.fillText(overlayMsg.lines[i],GW/2,startY+i*(baseSize+10));
   }
   ox.restore();
 }
@@ -439,7 +444,7 @@ function init(){
   S.platforms=[];S.coins=[];S.enemies=[];S.particles=[];S.floats=[];
   S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.frame=0;
   S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;
-  S.mode='3d';S.tCamH=500;S.tCamA=1.2;S.camH=500;S.camA=1.2;S.groundY=0;
+  S.mode='3d';S.tCamH=600;S.tCamA=1.2;S.camH=600;S.camA=1.2;S.groundY=0;
   document.getElementById('msg').style.display='none';
   document.getElementById('levelDisp').textContent='Get Ready';
   document.getElementById('scoreDisp').textContent='Score 0';
