@@ -429,7 +429,7 @@ function makeGridTex(color){
   let cv=document.createElement('canvas');cv.width=64;cv.height=64;
   let gx=cv.getContext('2d');
   gx.fillStyle=color;gx.fillRect(0,0,64,64);
-  gx.strokeStyle='rgba(255,255,255,0.7)';gx.lineWidth=2;
+  gx.strokeStyle='rgba(255,255,255,1)';gx.lineWidth=2;
   for(let i=0;i<=64;i+=32){gx.beginPath();gx.moveTo(i,0);gx.lineTo(i,64);gx.stroke();gx.beginPath();gx.moveTo(0,i);gx.lineTo(64,i);gx.stroke()}
   let tex=new THREE.CanvasTexture(cv);
   tex.wrapS=THREE.RepeatWrapping;tex.wrapT=THREE.RepeatWrapping;
@@ -536,7 +536,9 @@ function draw3D(){
     if(!p.mesh){
       let mat=gpm(p.color).clone();
       mat.map=mat.map.clone();mat.map.needsUpdate=true;
-      mat.map.repeat.set(p.w/32,CONFIG.platDepth/32);
+      let rx=p.w/32,rz=CONFIG.platDepth/32;
+      mat.map.repeat.set(rx,rz);
+      mat.map.offset.set((1-rx%1)/2,(1-rz%1)/2);
       p.mesh=new THREE.Mesh(new THREE.BoxGeometry(p.w,p.h,CONFIG.platDepth),mat);
       scene.add(p.mesh);
     }
