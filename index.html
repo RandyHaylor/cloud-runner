@@ -75,14 +75,16 @@ function drawOverlay(){
   ox.clearRect(0,0,GW,GH);
   if(!overlayMsg) return;
   let t=performance.now()*0.001;
-  // Bob: fixed base, up small, back to base, up double, back to base
-  // Smooth triangle wave motion, not a jump arc
+  // Bob: sine-eased, small bob then big bob
   let cycle=t%3;
   let bobY=0;
-  if(cycle<0.75) bobY=-20*(cycle/0.75);        // rise small
-  else if(cycle<1.5) bobY=-20*(1-(cycle-0.75)/0.75); // back to base
-  else if(cycle<2.25) bobY=-40*((cycle-1.5)/0.75);   // rise big
-  else bobY=-40*(1-(cycle-2.25)/0.75);                // back to base
+  if(cycle<1.5){
+    let p=Math.sin(cycle/1.5*Math.PI);
+    bobY=-20*p;
+  } else {
+    let p=Math.sin((cycle-1.5)/1.5*Math.PI);
+    bobY=-40*p;
+  }
 
   ox.save();
   ox.fillStyle=overlayMsg.color;
