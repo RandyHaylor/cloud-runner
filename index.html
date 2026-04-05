@@ -202,14 +202,23 @@ function buildLevel(stageOverride){
 function jStart(){
   if(S.over){init();return}
   if(S.player.onGround){
-    S.player.vy=CONFIG.jumpForce;S.player.onGround=false;
-    S.jumping=true;S.held=true;
-    for(let i=0;i<8;i++) S.particles.push({x:S.player.x+14,y:S.player.y+28,vx:(Math.random()-0.5)*4,vy:Math.random()*-3,life:15,color:'#00ff88',sz:3+Math.random()*3});
+    S.charging=true;
+    S.chargeStart=S.frame;
   }
 }
 function jEnd(){
+  if(S.charging&&S.player.onGround){
+    // Jump power based on charge time (0.15s to 0.5s mapped to cutoff to full)
+    let held=Math.min((S.frame-S.chargeStart)/30,1);
+    let power=CONFIG.jumpCutoff+(CONFIG.jumpForce-CONFIG.jumpCutoff)*held;
+    S.player.vy=power;
+    S.player.onGround=false;
+    S.jumping=true;
+    S.player.squash=0.2; // quick unsquish on release
+    for(let i=0;i<8;i++) S.particles.push({x:S.player.x+14,y:S.player.y+28,vx:(Math.random()-0.5)*4,vy:Math.random()*-3,life:15,color:'#00ff88',sz:3+Math.random()*3});
+  }
+  S.charging=false;
   S.held=false;
-  if(S.jumping&&S.player.vy<CONFIG.jumpCutoff) S.player.vy=CONFIG.jumpCutoff;
   S.jumping=false;
 }
 function togglePause(){
@@ -261,6 +270,14 @@ function update(){
   S.speed=CONFIG.baseSpeed+Math.min(S.score/CONFIG.speedDiv,CONFIG.maxSpeedBonus);
 
   // Gravity & movement
+  // Squish while charging, unsquish after release
+  if(S.charging){
+    let t=Math.min((S.frame-S.chargeStart)/30,1);
+    S.player.squash=t*0.4; // max 40% squish
+  } else if(S.player.squash>0){
+    S.player.squash=Math.max(0,S.player.squash-0.08); // quick spring back
+  }
+
   S.player.vy+=CONFIG.gravity;
   S.player.y+=S.player.vy;
   S.player.onGround=false;
@@ -388,8 +405,11 @@ function draw2D(){
   for(let f of S.floats){x.globalAlpha=f.life/40;x.fillStyle=f.color;x.font='bold 28px monospace';x.fillText(f.text,f.x,f.y-30)}x.globalAlpha=1;
 
   x.save();
-  let pcx=S.player.x+S.player.w/2,pcy=S.player.y+S.player.h/2;
+  let sq=S.player.squash||0;
+  let scaleX=1+sq*0.5,scaleY=1-sq;
+  let pcx=S.player.x+S.player.w/2,pcy=S.player.y+S.player.h;
   x.translate(pcx,pcy);
+  x.scale(scaleX,scaleY);
   x.rotate(S.player.vy*0.02);
   x.translate(-pcx,-pcy);
   x.fillStyle='#00ff88';x.shadowColor='#00ff88';x.shadowBlur=15;x.fillRect(S.player.x,S.player.y,S.player.w,S.player.h);x.shadowBlur=0;
@@ -527,7 +547,10 @@ function draw3D(){
   camera.position.set(px-400+S.camXOffset, py+40+S.camYOffset, 50+S.camZExtra);
   camera.lookAt(px+300+S.camXOffset*0.5, py-30+S.camLookYOffset, 0);
   plight.position.set(px+200,200,300);
-  pmesh.position.set(px+14,-S.player.y-14,8);pmesh.rotation.z=S.player.vy*0.02;
+  let sq3=S.player.squash||0;
+  pmesh.position.set(px+14,-S.player.y-14*(1-sq3),8);
+  pmesh.rotation.z=S.player.vy*0.02;
+  pmesh.scale.set(1+sq3*0.5,1-sq3,1+sq3*0.5);
 
   // Player shadow (uses gndY stored during collision)
   if(S.player.gndY) updateShadow(playerShadow,S.player.x,S.player.y,S.player.gndY,S.player.w);
@@ -589,7 +612,7 @@ function init(){
   S.player={x:GW*0.2,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false,gndY:GH*0.6};
   S.platforms=[];S.coins=[];S.enemies=[];S.particles=[];S.floats=[];
   S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.frame=0;
-  S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;S.paused=false;
+  S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;S.paused=false;S.charging=false;S.chargeStart=0;
   S.mode='2d';S.tCamH=600;S.tCamA=1.2;S.camH=600;S.camA=1.2;S.groundY=0;
   S.camYOffset=0;S.camLookYOffset=0;S.camXOffset=0;S.camZExtra=0;
   document.getElementById('msg').style.display='none';
