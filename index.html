@@ -210,9 +210,18 @@ function jStart(){
   S.charging=true;
   S.chargeStart=S.frame;
 }
+function nearGround(){
+  if(S.player.onGround) return true;
+  let threshold=S.player.h*0.5;
+  let feet=S.player.y+S.player.h;
+  for(let p of S.platforms){
+    if(S.player.x+S.player.w>p.x&&S.player.x<p.x+p.w&&feet>=p.y-threshold&&feet<=p.y+p.h+10) return true;
+  }
+  return false;
+}
 function jEnd(){
-  if(S.charging&&S.player.onGround){
-    // Jump fires only if on ground at release
+  if(S.charging&&nearGround()){
+    // Jump fires if on or near ground at release
     let held=Math.min((S.frame-S.chargeStart)/15,1);
     let power=CONFIG.jumpCutoff+(CONFIG.jumpForce-CONFIG.jumpCutoff)*held;
     S.player.vy=power;
