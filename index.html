@@ -238,15 +238,14 @@ function jEnd(){
   if(onOrNear){
     // Ground jump (or forgiveness near ground)
     doJump(power);
-    S.charging=false;
   } else if(jumps<2){
     // Double jump in air
     doJump(power);
-    S.charging=false;
   } else {
-    // Past double jump — store power, stay squished until landing
+    // Past double jump — store power for auto-jump on landing
     S.player.storedPower=power;
   }
+  S.charging=false;
   S.held=false;
 }
 function togglePause(){
