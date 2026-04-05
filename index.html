@@ -230,21 +230,22 @@ function getChargePower(){
   return CONFIG.jumpCutoff+(CONFIG.jumpForce-CONFIG.jumpCutoff)*held;
 }
 function jEnd(){
-  if(!S.charging) return;
+  if(!S.charging){return}
+  let power=getChargePower();
   let onOrNear=S.player.onGround||nearGround();
   let jumps=S.player.jumpsUsed||0;
 
   if(onOrNear){
-    // Ground jump
-    doJump(getChargePower());
-    S.charging=false;
+    // Ground jump (or forgiveness near ground)
+    doJump(power);
   } else if(jumps<2){
     // Double jump in air
-    doJump(getChargePower());
-    S.charging=false;
+    doJump(power);
+  } else {
+    // Past double jump — store power for auto-jump on landing
+    S.player.storedPower=power;
   }
-  // If jumps>=2 and in air: keep charging. Character stays squished.
-  // Landing code will fire the jump using live charge power.
+  S.charging=false;
   S.held=false;
 }
 function togglePause(){
@@ -319,10 +320,10 @@ function update(){
       &&S.player.y+S.player.h>=p.y&&S.player.y+S.player.h<=p.y+p.h+10){
       S.player.y=p.y-S.player.h;S.player.vy=0;S.player.onGround=true;S.player.gndY=p.y;
       S.player.jumpsUsed=0;
-      // If still charging when landing, fire jump immediately
-      if(S.charging){
-        doJump(getChargePower());
-        S.charging=false;
+      // Fire stored jump on landing
+      if(S.player.storedPower){
+        doJump(S.player.storedPower);
+        S.player.storedPower=0;
       }
     }
   }
