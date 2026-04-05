@@ -25,7 +25,7 @@ canvas{display:block;position:absolute;top:0;left:0;z-index:0}
   </div>
   <div id="debug" style="display:none"></div>
   <div id="msg"></div>
-  <button id="pause">II</button>
+  <button id="pause"><svg width="30" height="30" viewBox="0 0 30 30"><rect x="7" y="5" width="5" height="20" fill="white"/><rect x="18" y="5" width="5" height="20" fill="white"/></svg></button>
   <button id="jump">JUMP</button>
   <canvas id="canvas2d"></canvas>
   <canvas id="overlay" style="z-index:50;pointer-events:none"></canvas>
@@ -150,7 +150,7 @@ function buildLevel(stageOverride){
   } else if(stage==='enemies'){
     // Enemy level: mega platform(s) with enemies
     // In 2D mode, generate multiple mega-platforms instead of scaling one
-    let megaCount=S.mode==='2d'?2:1;
+    let megaCount=S.mode==='2d'?3:2;
     for(let mi=0;mi<megaCount;mi++){
     let megaW=GW*3+Math.random()*GW;
     let mp={x:last.x+last.w,y:last.y,w:megaW,h:CONFIG.platH,color:rc(),mesh:null};
@@ -210,7 +210,7 @@ function jEnd(){
 }
 function togglePause(){
   S.paused=!S.paused;
-  document.getElementById('pause').textContent=S.paused?'PLAY':'II';
+  document.getElementById('pause').innerHTML=S.paused?'<svg width="30" height="30" viewBox="0 0 30 30"><polygon points="8,4 8,26 26,15" fill="white"/></svg>':'<svg width="30" height="30" viewBox="0 0 30 30"><rect x="7" y="5" width="5" height="20" fill="white"/><rect x="18" y="5" width="5" height="20" fill="white"/></svg>';
 }
 
 function setupInput(){
