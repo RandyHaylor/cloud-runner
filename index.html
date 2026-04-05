@@ -462,12 +462,12 @@ function updateShadow(mesh,objX,objY,groundY,objW){
   let scale=Math.max(2,objW*0.5*(1-height*0.002));
   let alpha=Math.max(0,0.8-height*0.005);
   mesh.scale.set(scale,scale,1);
-  mesh.position.set(cx,-(groundY)+CONFIG.platH/2+0.2,0);
+  mesh.position.set(cx,-(groundY)+CONFIG.platH/2+0.2,mesh._isPlayerShadow?8:0);
   mesh.material.opacity=alpha;
   mesh.visible=alpha>0.02;
 }
 
-let playerShadow=makeShadow();
+let playerShadow=makeShadow();playerShadow._isPlayerShadow=true;
 
 // 3D Particle system using Points
 const MAX_3D_PARTICLES=200;
@@ -527,7 +527,7 @@ function draw3D(){
   camera.position.set(px-400+S.camXOffset, py+40+S.camYOffset, 50+S.camZExtra);
   camera.lookAt(px+300+S.camXOffset*0.5, py-30+S.camLookYOffset, 0);
   plight.position.set(px+200,200,300);
-  pmesh.position.set(px+14,-S.player.y-14,0);pmesh.rotation.z=S.player.vy*0.02;
+  pmesh.position.set(px+14,-S.player.y-14,8);pmesh.rotation.z=S.player.vy*0.02;
 
   // Player shadow (uses gndY stored during collision)
   if(S.player.gndY) updateShadow(playerShadow,S.player.x,S.player.y,S.player.gndY,S.player.w);
