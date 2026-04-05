@@ -159,7 +159,7 @@ function buildLevel(stageOverride){
     let mp={x:last.x+last.w,y:last.y,w:megaW,h:CONFIG.platH,color:rc(),mesh:null};
     S.platforms.push(mp);
     let margin=CONFIG.enemyMargin,usable=megaW-margin*2;
-    let n=Math.max(2,Math.floor(usable/200)+Math.floor(d*2));
+    let n=Math.max(2,Math.floor(usable/230)+Math.floor(d*2));
     let sp=usable/(n+1);
     for(let e=0;e<n;e++){
       let jitter=(Math.random()-0.5)*sp*0.4;
