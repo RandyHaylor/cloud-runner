@@ -209,7 +209,7 @@ function jStart(){
 function jEnd(){
   if(S.charging&&S.player.onGround){
     // Jump power based on charge time (0.15s to 0.5s mapped to cutoff to full)
-    let held=Math.min((S.frame-S.chargeStart)/30,1);
+    let held=Math.min((S.frame-S.chargeStart)/15,1);
     let power=CONFIG.jumpCutoff+(CONFIG.jumpForce-CONFIG.jumpCutoff)*held;
     S.player.vy=power;
     S.player.onGround=false;
@@ -272,7 +272,7 @@ function update(){
   // Gravity & movement
   // Squish while charging, unsquish after release
   if(S.charging){
-    let t=Math.min((S.frame-S.chargeStart)/30,1);
+    let t=Math.min((S.frame-S.chargeStart)/15,1);
     S.player.squash=t*0.4; // max 40% squish
   } else if(S.player.squash>0){
     S.player.squash=Math.max(0,S.player.squash-0.08); // quick spring back
