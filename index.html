@@ -71,26 +71,74 @@ let overlayMsg=null;
 
 function showOverlay(lines,color){overlayMsg={lines,color:color||'#fff'}}
 function hideOverlay(){overlayMsg=null}
+function drawWrappedText(ctx,lines,x,startY,font,color,maxW,lineH,gapH){
+  ctx.font=font;ctx.fillStyle=color;ctx.textAlign='center';
+  let y=startY;
+  for(let i=0;i<lines.length;i++){
+    let words=lines[i].split(' '),line='';
+    for(let w of words){
+      let test=line?line+' '+w:w;
+      if(ctx.measureText(test).width>maxW){ctx.fillText(line,x,y);y+=lineH;line=w;}
+      else line=test;
+    }
+    if(line){ctx.fillText(line,x,y);y+=gapH;}
+  }
+  return y;
+}
+
+function drawHelpScreen(){
+  ox.save();
+  ox.fillStyle='rgba(0,0,0,0.75)';ox.fillRect(0,0,GW,GH);
+  let y=30;
+  ox.fillStyle='#4ecdc4';ox.font='bold 20px monospace';ox.textAlign='center';
+  ox.fillText('HOW TO PLAY',GW/2,y);y+=30;
+
+  // Jump tips
+  y=drawWrappedText(ox,['Hold jump longer to jump higher','Immediately hold and release jump again in the air','Hold a third time before falling to store jump for when you hit the ground'],GW/2,y,'bold 13px monospace','#fff',GW-40,17,24);
+  y+=10;
+
+  // Coins section
+  ox.fillStyle='#ffd700';ox.font='bold 15px monospace';
+  ox.fillText('COLLECT COINS',GW/2,y);y+=25;
+  // Draw small gold coin
+  ox.fillStyle='#ffd700';ox.beginPath();ox.arc(GW/2-60,y,7,0,6.28);ox.fill();
+  ox.fillStyle='#fff';ox.font='13px monospace';ox.textAlign='left';
+  ox.fillText('= 1 point',GW/2-45,y+5);y+=25;
+  // Draw big pink coin
+  ox.fillStyle='#ff69b4';ox.beginPath();ox.arc(GW/2-60,y,10,0,6.28);ox.fill();
+  ox.fillStyle='#fff';
+  ox.fillText('= 3 points',GW/2-45,y+5);y+=30;
+
+  // Enemies section
+  ox.fillStyle='#ff0044';ox.font='bold 15px monospace';ox.textAlign='center';
+  ox.fillText('AVOID ENEMIES',GW/2,y);y+=25;
+  // Draw ground enemy
+  ox.fillStyle='#ff0044';ox.fillRect(GW/2-70,y-10,22,22);
+  ox.fillStyle='#ff4477';
+  for(let s=0;s<3;s++){let sx=GW/2-70+3+s*8;ox.beginPath();ox.moveTo(sx,y-10);ox.lineTo(sx+4,y-16);ox.lineTo(sx+8,y-10);ox.fill()}
+  ox.fillStyle='#fff';ox.fillRect(GW/2-66,y-4,5,5);ox.fillRect(GW/2-57,y-4,5,5);
+  ox.fillStyle='#fff';ox.font='13px monospace';ox.textAlign='left';
+  ox.fillText('Hop in place',GW/2-40,y+5);y+=30;
+  // Draw flying enemy
+  ox.fillStyle='#9b59b6';ox.beginPath();ox.arc(GW/2-59,y,11,0,6.28);ox.fill();
+  ox.fillStyle='#8e44ad';ox.beginPath();ox.moveTo(GW/2-70,y-3);ox.lineTo(GW/2-82,y-8);ox.lineTo(GW/2-74,y+3);ox.fill();
+  ox.beginPath();ox.moveTo(GW/2-48,y-3);ox.lineTo(GW/2-36,y-8);ox.lineTo(GW/2-44,y+3);ox.fill();
+  ox.fillStyle='#ff0';ox.fillRect(GW/2-64,y-4,4,4);ox.fillRect(GW/2-56,y-4,4,4);
+  ox.fillStyle='#fff';ox.font='13px monospace';ox.textAlign='left';
+  ox.fillText('Fly and bob',GW/2-40,y+5);
+
+  ox.restore();
+}
+
 function drawOverlay(){
   ox.clearRect(0,0,GW,GH);
+  if(S.showHelp){drawHelpScreen();return}
   if(!overlayMsg) return;
   ox.save();
   ox.fillStyle=overlayMsg.color;
   ox.textAlign='center';
-  ox.shadowColor='#4ecdc4';
-  ox.shadowBlur=12;
-  ox.font='bold 16px monospace';
-  let baseY=GH*0.15;
-  for(let i=0;i<overlayMsg.lines.length;i++){
-    let words=overlayMsg.lines[i].split(' '),line='';
-    for(let w of words){
-      let test=line?line+' '+w:w;
-      if(ox.measureText(test).width>GW-30){
-        ox.fillText(line,GW/2,baseY);baseY+=20;line=w;
-      } else line=test;
-    }
-    if(line){ox.fillText(line,GW/2,baseY);baseY+=30;}
-  }
+  ox.shadowColor='#4ecdc4';ox.shadowBlur=12;
+  drawWrappedText(ox,overlayMsg.lines,GW/2,GH*0.15,'bold 16px monospace',overlayMsg.color,GW-30,20,30);
   ox.restore();
 }
 
@@ -169,7 +217,7 @@ function buildLevel(stageOverride){
 
   if(stage==='intro'){
     // Intro: no coins, show tutorial
-    showOverlay(['Hold jump longer to jump higher','Immediately hold and release jump again in the air','Hold a third time before falling to store jump for when you hit the ground'],'#fff');
+    showOverlay(['Press II for instructions'],'#fff');
   } else if(stage==='enemies'){
     // Enemy level: mega platform(s) with enemies
     // In 2D mode, generate multiple mega-platforms instead of scaling one
@@ -274,8 +322,8 @@ function jEnd(){
 function togglePause(){
   S.paused=!S.paused;
   document.getElementById('pause').innerHTML=S.paused?'<svg width="30" height="30" viewBox="0 0 30 30"><polygon points="8,4 8,26 26,15" fill="white"/></svg>':'<svg width="30" height="30" viewBox="0 0 30 30"><rect x="7" y="5" width="5" height="20" fill="white"/><rect x="18" y="5" width="5" height="20" fill="white"/></svg>';
-  if(S.paused) showOverlay(['Hold jump longer to jump higher','Immediately hold and release jump again in the air','Hold a third time before falling to store jump for when you hit the ground'],'#fff');
-  else hideOverlay();
+  if(S.paused) S.showHelp=true;
+  else S.showHelp=false;
 }
 
 function setupInput(){
