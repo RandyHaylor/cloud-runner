@@ -210,8 +210,16 @@ function jStart(){
   S.charging=true;
   S.chargeStart=S.frame;
 }
+function nearGround(){
+  let threshold=S.player.h*0.5;
+  let feet=S.player.y+S.player.h;
+  for(let p of S.platforms){
+    if(S.player.x+S.player.w>p.x&&S.player.x<p.x+p.w&&feet>=p.y-threshold&&feet<=p.y+p.h+10) return true;
+  }
+  return false;
+}
 function canJump(){
-  if(S.player.onGround) return true;
+  if(S.player.onGround||nearGround()) return true;
   if(!S.player.jumpsUsed) S.player.jumpsUsed=0;
   return S.player.jumpsUsed<2;
 }
