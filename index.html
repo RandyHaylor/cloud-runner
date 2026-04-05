@@ -74,34 +74,22 @@ function hideOverlay(){overlayMsg=null}
 function drawOverlay(){
   ox.clearRect(0,0,GW,GH);
   if(!overlayMsg) return;
-  let t=performance.now()*0.001;
-  // Bob: smooth sine, small bob then big bob
-  // Use cos so it starts at base (1), goes up (-1), returns to base (1)
-  let cycle=t%4;
-  let bobY=0;
-  if(cycle<2){
-    bobY=20*(Math.cos(cycle*Math.PI)-1)*0.5;   // 0 to -20 to 0
-  } else {
-    bobY=40*(Math.cos((cycle-2)*Math.PI)-1)*0.5; // 0 to -40 to 0
-  }
-
   ox.save();
   ox.fillStyle=overlayMsg.color;
   ox.textAlign='center';
   ox.shadowColor='#4ecdc4';
   ox.shadowBlur=12;
-  ox.font='bold 14px monospace';
-  let baseY=GH*0.22;
+  ox.font='bold 16px monospace';
+  let baseY=GH*0.15;
   for(let i=0;i<overlayMsg.lines.length;i++){
-    // Word wrap each line within game width
-    let words=overlayMsg.lines[i].split(' '),line='',ly=0;
+    let words=overlayMsg.lines[i].split(' '),line='';
     for(let w of words){
       let test=line?line+' '+w:w;
-      if(ox.measureText(test).width>GW-40){
-        ox.fillText(line,GW/2,baseY+bobY);baseY+=16;line=w;
+      if(ox.measureText(test).width>GW-30){
+        ox.fillText(line,GW/2,baseY);baseY+=20;line=w;
       } else line=test;
     }
-    if(line){ox.fillText(line,GW/2,baseY+bobY);baseY+=28;}
+    if(line){ox.fillText(line,GW/2,baseY);baseY+=30;}
   }
   ox.restore();
 }
@@ -123,6 +111,30 @@ function spawnGround(x,y){
 function spawnFlyer(x,py){
   let fy=py-CONFIG.flyerBase-Math.random()*CONFIG.flyerVar;
   S.enemies.push({x,y:fy,w:CONFIG.enemyW,h:CONFIG.enemyH,fly:true,baseY:fy,phase:Math.random()*6.28,gndY:py,mesh:null});
+}
+
+// High coin formations — grids and arcs for triple-jump reach
+function spawnCoinFormation(baseX, groundY){
+  let type=Math.floor(Math.random()*4);
+  let highY=groundY-120-Math.random()*60; // well above normal jump height
+  if(type===0){
+    // 3-coin horizontal line
+    for(let i=0;i<3;i++) spawnCoin(baseX+i*25,highY,false,groundY);
+  } else if(type===1){
+    // 4-coin square grid
+    for(let r=0;r<2;r++) for(let c=0;c<2;c++) spawnCoin(baseX+c*25,highY+r*25,false,groundY);
+  } else if(type===2){
+    // 6-coin 2x3 grid
+    for(let r=0;r<2;r++) for(let c=0;c<3;c++) spawnCoin(baseX+c*25,highY+r*25,false,groundY);
+  } else {
+    // 9-coin arc
+    for(let i=0;i<9;i++){
+      let angle=Math.PI*(0.2+i*0.075);
+      let ax=baseX+Math.cos(angle)*60;
+      let ay=highY-Math.sin(angle)*40+40;
+      spawnCoin(ax,ay,i===4,groundY); // center coin is big
+    }
+  }
 }
 
 // ============================================================
@@ -178,6 +190,7 @@ function buildLevel(stageOverride){
     for(let e=0;e<n;e++){
       let cx=mp.x+margin+sp*(e+0.5);
       spawnCoin(cx,mp.y-30,Math.random()<0.2);
+      if(Math.random()<0.3) spawnCoinFormation(cx+30,mp.y);
     }
     last=mp;
     }
@@ -193,6 +206,7 @@ function buildLevel(stageOverride){
       let np={x:last.x+last.w+gap,y:pny,w:nw,h:CONFIG.platH,color:rc(),mesh:null};
       S.platforms.push(np);
       if(Math.random()<0.7) spawnCoinsOn(np);
+      if(Math.random()<0.25) spawnCoinFormation(np.x+np.w*0.3+Math.random()*np.w*0.4, np.y);
       last=np;
     }
   }
