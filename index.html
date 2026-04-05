@@ -96,20 +96,20 @@ function drawOverlay(){
 // ============================================================
 // SPAWNING
 // ============================================================
-function spawnCoin(x,y,big){
-  S.coins.push({x,y,w:big?20:14,h:big?20:14,bob:Math.random()*6.28,big,val:big?3:1,mesh:null});
+function spawnCoin(x,y,big,gndY){
+  S.coins.push({x,y,w:big?20:14,h:big?20:14,bob:Math.random()*6.28,big,val:big?3:1,gndY:gndY||y+30,mesh:null});
 }
 function spawnCoinsOn(p){
   for(let i=0,n=2+Math.floor(Math.random()*3);i<n;i++){
-    spawnCoin(p.x+20+i*30,Math.random()<CONFIG.highCoinChance?p.y-65:p.y-30,Math.random()<CONFIG.bigCoinChance);
+    spawnCoin(p.x+20+i*30,Math.random()<CONFIG.highCoinChance?p.y-65:p.y-30,Math.random()<CONFIG.bigCoinChance,p.y);
   }
 }
 function spawnGround(x,y){
-  S.enemies.push({x,y:y-CONFIG.enemyH,w:CONFIG.enemyW,h:CONFIG.enemyH,fly:false,hop:0,hopT:0,mesh:null});
+  S.enemies.push({x,y:y-CONFIG.enemyH,w:CONFIG.enemyW,h:CONFIG.enemyH,fly:false,hop:0,hopT:0,gndY:y,mesh:null});
 }
 function spawnFlyer(x,py){
   let fy=py-CONFIG.flyerBase-Math.random()*CONFIG.flyerVar;
-  S.enemies.push({x,y:fy,w:CONFIG.enemyW,h:CONFIG.enemyH,fly:true,baseY:fy,phase:Math.random()*6.28,mesh:null});
+  S.enemies.push({x,y:fy,w:CONFIG.enemyW,h:CONFIG.enemyH,fly:true,baseY:fy,phase:Math.random()*6.28,gndY:py,mesh:null});
 }
 
 // ============================================================
@@ -258,7 +258,7 @@ function update(){
   for(let p of S.platforms){
     if(S.player.vy>=0&&S.player.x+S.player.w>p.x&&S.player.x<p.x+p.w
       &&S.player.y+S.player.h>=p.y&&S.player.y+S.player.h<=p.y+p.h+10){
-      S.player.y=p.y-S.player.h;S.player.vy=0;S.player.onGround=true;
+      S.player.y=p.y-S.player.h;S.player.vy=0;S.player.onGround=true;S.player.gndY=p.y;
     }
   }
 
@@ -307,6 +307,7 @@ function update(){
       ftext(c.x,cy,'+'+c.val,c.val>1?'#ff69b4':'#ffd700');
       for(let j=0;j<6;j++) S.particles.push({x:c.x+7,y:cy+7,vx:(Math.random()-0.5)*5,vy:(Math.random()-0.5)*5,life:20,color:'#ffd700',sz:3});
       if(c.mesh&&c.mesh.parent) scene.remove(c.mesh);
+      if(c.shadow&&c.shadow.parent) scene.remove(c.shadow);
       S.coins.splice(i,1);
     }
   }
@@ -326,8 +327,8 @@ function update(){
 
   // Cleanup offscreen + remove 3D meshes
   S.platforms=S.platforms.filter(p=>{if(p.x+p.w<-50){if(p.mesh&&p.mesh.parent)scene.remove(p.mesh);return false}return true});
-  S.coins=S.coins.filter(c=>{if(c.x<-50){if(c.mesh&&c.mesh.parent)scene.remove(c.mesh);return false}return true});
-  S.enemies=S.enemies.filter(e=>{if(e.x<-50){if(e.mesh&&e.mesh.parent)scene.remove(e.mesh);return false}return true});
+  S.coins=S.coins.filter(c=>{if(c.x<-50){if(c.mesh&&c.mesh.parent)scene.remove(c.mesh);if(c.shadow&&c.shadow.parent)scene.remove(c.shadow);return false}return true});
+  S.enemies=S.enemies.filter(e=>{if(e.x<-50){if(e.mesh&&e.mesh.parent)scene.remove(e.mesh);if(e.shadow&&e.shadow.parent)scene.remove(e.shadow);return false}return true});
 
   // HUD
   document.getElementById('scoreDisp').textContent='Score '+S.score;
@@ -388,7 +389,7 @@ ren.domElement.style.position='absolute';ren.domElement.style.top='0';ren.domEle
 
 scene.add(new THREE.AmbientLight(0x404060,0.6));
 let dl=new THREE.DirectionalLight(0xffffff,0.8);dl.position.set(200,-300,500);scene.add(dl);
-const plight=new THREE.PointLight(0x00ff88,1,500);scene.add(plight);
+const plight=new THREE.PointLight(0xffffff,0.8,3000);plight.position.set(0,400,300);scene.add(plight);
 scene.background=new THREE.Color(0x0f0c29);scene.fog=new THREE.Fog(0x0f0c29,1500,4000);
 
 let sv=[];for(let i=0;i<200;i++)sv.push((Math.random()-0.5)*2000,-(Math.random()*800),(Math.random()-0.5)*1000-200);
@@ -420,6 +421,36 @@ let pmats={};function gpm(c){
   }
   return pmats[c];
 }
+// Blob shadow system
+const shadowTex=(function(){
+  let cv=document.createElement('canvas');cv.width=32;cv.height=32;
+  let gx=cv.getContext('2d');
+  let grad=gx.createRadialGradient(16,16,0,16,16,16);
+  grad.addColorStop(0,'rgba(0,0,0,0.6)');grad.addColorStop(1,'rgba(0,0,0,0)');
+  gx.fillStyle=grad;gx.fillRect(0,0,32,32);
+  return new THREE.CanvasTexture(cv);
+})();
+const shadowMat=new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false});
+function makeShadow(){
+  let m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),shadowMat.clone());
+  m.rotation.x=-Math.PI/2;
+  scene.add(m);
+  return m;
+}
+// Update shadow: objX, objY (game coords), groundY (platform Y), objW (width)
+function updateShadow(mesh,objX,objY,groundY,objW){
+  let height=groundY-objY-objW; // distance above ground
+  if(height<0) height=0;
+  let scale=objW*(1+height*0.005);
+  let alpha=Math.max(0,0.5-height*0.003);
+  mesh.scale.set(scale,scale,1);
+  mesh.position.set(objX+objW/2,-(groundY-1),0);
+  mesh.material.opacity=alpha;
+  mesh.visible=alpha>0.02;
+}
+
+let playerShadow=makeShadow();
+
 const coinMat=new THREE.MeshPhongMaterial({color:0xffd700,emissive:0x443300,shininess:100});
 const bigCoinMat=new THREE.MeshPhongMaterial({color:0xff69b4,emissive:0x441133,shininess:100});
 const enemyMat=new THREE.MeshPhongMaterial({color:0xff0044,emissive:0x440011,shininess:60});
@@ -434,8 +465,11 @@ function draw3D(){
   // Over-the-shoulder: tight behind player, nearly straight ahead
   camera.position.set(px-180+S.camXOffset, py+50+S.camYOffset, 65+S.camZExtra);
   camera.lookAt(px+350+S.camXOffset*0.5, py-10+S.camLookYOffset, 0);
-  plight.position.set(px,-S.player.y+20,30);
+  plight.position.set(px+200,200,300);
   pmesh.position.set(px+14,-S.player.y-14,0);pmesh.rotation.z=S.player.vy*0.02;
+
+  // Player shadow (uses gndY stored during collision)
+  if(S.player.gndY) updateShadow(playerShadow,S.player.x,S.player.y,S.player.gndY,S.player.w);
 
   for(let p of S.platforms){
     if(!p.mesh){
@@ -449,18 +483,21 @@ function draw3D(){
   }
   for(let c of S.coins){
     let cy=c.y+Math.sin(S.frame*0.08+c.bob)*5;
-    if(!c.mesh){c.mesh=new THREE.Mesh(new THREE.SphereGeometry(c.big?10:7,12,12),c.big?bigCoinMat:coinMat);scene.add(c.mesh)}
+    if(!c.mesh){c.mesh=new THREE.Mesh(new THREE.SphereGeometry(c.big?10:7,12,12),c.big?bigCoinMat:coinMat);scene.add(c.mesh);c.shadow=makeShadow()}
     c.mesh.position.set(c.x+c.w/2,-(cy+c.h/2),0);c.mesh.rotation.y=S.frame*0.05;
+    updateShadow(c.shadow,c.x,cy,c.gndY,c.w);
   }
   for(let e of S.enemies){
     if(e.fly){
       let fy=e.baseY+Math.sin(S.frame*0.05+e.phase)*CONFIG.flyerBob;e.y=fy;
-      if(!e.mesh){let g=new THREE.Group(),b=new THREE.Mesh(new THREE.SphereGeometry(11,8,8),flyerMat);g.add(b);let wm=new THREE.MeshPhongMaterial({color:0x8e44ad,side:THREE.DoubleSide}),wL=new THREE.Mesh(new THREE.PlaneGeometry(16,10),wm),wR=new THREE.Mesh(new THREE.PlaneGeometry(16,10),wm);wL.position.z=-14;wR.position.z=14;g.add(wL);g.add(wR);e.mesh=g;e.mesh.userData={wL,wR};scene.add(g)}
+      if(!e.mesh){let g=new THREE.Group(),b=new THREE.Mesh(new THREE.SphereGeometry(11,8,8),flyerMat);g.add(b);let wm=new THREE.MeshPhongMaterial({color:0x8e44ad,side:THREE.DoubleSide}),wL=new THREE.Mesh(new THREE.PlaneGeometry(16,10),wm),wR=new THREE.Mesh(new THREE.PlaneGeometry(16,10),wm);wL.position.z=-14;wR.position.z=14;g.add(wL);g.add(wR);e.mesh=g;e.mesh.userData={wL,wR};scene.add(g);e.shadow=makeShadow()}
       e.mesh.position.set(e.x+11,-(fy+11),0);let wf=Math.sin(S.frame*0.15+e.phase)*0.5;e.mesh.userData.wL.rotation.x=wf;e.mesh.userData.wR.rotation.x=-wf;
+      updateShadow(e.shadow,e.x,fy,e.gndY,e.w);
     } else {
       let h=e.hop;
-      if(!e.mesh){let g=new THREE.Group(),b=new THREE.Mesh(new THREE.BoxGeometry(e.w,e.h,e.w),enemyMat);g.add(b);for(let s=0;s<3;s++){let sp=new THREE.Mesh(new THREE.ConeGeometry(4,8,4),spikeMat);sp.position.set(-8+s*8,e.h/2+4,0);g.add(sp)}e.mesh=g;scene.add(g)}
+      if(!e.mesh){let g=new THREE.Group(),b=new THREE.Mesh(new THREE.BoxGeometry(e.w,e.h,e.w),enemyMat);g.add(b);for(let s=0;s<3;s++){let sp=new THREE.Mesh(new THREE.ConeGeometry(4,8,4),spikeMat);sp.position.set(-8+s*8,e.h/2+4,0);g.add(sp)}e.mesh=g;scene.add(g);e.shadow=makeShadow()}
       e.mesh.position.set(e.x+11,-(e.y-h+11),0);
+      updateShadow(e.shadow,e.x,e.y-h,e.gndY,e.w);
     }
   }
 
@@ -482,7 +519,7 @@ function clearScene(){
 
 function init(){
   clearScene();
-  S.player={x:GW*0.3,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false};
+  S.player={x:GW*0.3,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false,gndY:GH*0.7};
   S.platforms=[];S.coins=[];S.enemies=[];S.particles=[];S.floats=[];
   S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.frame=0;
   S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;
