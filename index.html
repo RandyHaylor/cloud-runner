@@ -418,7 +418,7 @@ let sv=[];for(let i=0;i<200;i++)sv.push((Math.random()-0.5)*2000,-(Math.random()
 let sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sv,3));
 scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:2,transparent:true,opacity:0.6})));
 
-const pmesh=new THREE.Mesh(new THREE.BoxGeometry(28,28,28),new THREE.MeshPhongMaterial({color:0x00ff88,emissive:0x004422,shininess:80}));scene.add(pmesh);
+const pmesh=new THREE.Mesh(new THREE.BoxGeometry(28,28,28),new THREE.MeshPhongMaterial({color:0x00ff88,emissive:0x004422,shininess:80}));pmesh.renderOrder=999;scene.add(pmesh);
 let ewm=new THREE.MeshBasicMaterial({color:0xffffff}),ebm=new THREE.MeshBasicMaterial({color:0x000000});
 let eyeR=new THREE.Mesh(new THREE.BoxGeometry(6,6,2),ewm);eyeR.position.set(4,-4,15);pmesh.add(eyeR);
 let eyeL=new THREE.Mesh(new THREE.BoxGeometry(6,6,2),ewm);eyeL.position.set(4,5,15);pmesh.add(eyeL);
