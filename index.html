@@ -472,7 +472,7 @@ function draw3D(){
   if(S.player.onGround) S.groundY+=(-S.player.y-S.groundY)*0.05;
   let px=S.player.x,py=S.groundY;
   // Over-the-shoulder: tight behind player, nearly straight ahead
-  camera.position.set(px-280+S.camXOffset, py+80+S.camYOffset, 90+S.camZExtra);
+  camera.position.set(px-280+S.camXOffset, py+40+S.camYOffset, 50+S.camZExtra);
   camera.lookAt(px+300+S.camXOffset*0.5, py-30+S.camLookYOffset, 0);
   plight.position.set(px+200,200,300);
   pmesh.position.set(px+14,-S.player.y-14,0);pmesh.rotation.z=S.player.vy*0.02;
