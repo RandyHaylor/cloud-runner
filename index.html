@@ -91,16 +91,18 @@ function buildLevel(){
   let ny=Math.max(GH*0.35,Math.min(GH*0.8,last.y));
   let safe={x:last.x+last.w,y:ny,w:safeW,h:CONFIG.platH,color:rc(),mesh:null};
   S.platforms.push(safe);
-  spawnCoinsOn({x:safe.x+50,y:safe.y,w:safeW*0.3,h:0});
-  spawnCoinsOn({x:safe.x+safeW*0.5,y:safe.y,w:safeW*0.3,h:0});
+  if(S.stage!=='intro'){
+    spawnCoinsOn({x:safe.x+50,y:safe.y,w:safeW*0.3,h:0});
+    spawnCoinsOn({x:safe.x+safeW*0.5,y:safe.y,w:safeW*0.3,h:0});
+  }
   last=safe;
 
   // 2D levels need 2.4x more distance to feel equal to 3D
   let scale=S.mode==='2d'?2.4:1;
 
   if(S.stage==='intro'){
-    // Intro: just the safe platform with extra coins
-    spawnCoinsOn({x:safe.x+safeW*0.2,y:safe.y,w:safeW*0.3,h:0});
+    // Intro: no coins, just the tutorial text flag
+    S.showTutorial=true;
   } else if(S.stage==='enemies'){
     // Enemy level: mega platform with enemies
     let megaW=(GW*3+Math.random()*GW)*scale;
@@ -218,7 +220,7 @@ function update(){
 
       if(wasIntro){
         // Intro silently transitions to level 1
-        S.stageNum=1;
+        S.stageNum=1;S.showTutorial=false;
         ftext(S.player.x+20,S.player.y-50,'LEVEL 1','#fff');
       } else {
         // Real level complete — award points
@@ -316,6 +318,26 @@ function draw2D(){
   x.fillStyle='#00ff88';x.shadowColor='#00ff88';x.shadowBlur=15;x.fillRect(S.player.x,S.player.y,S.player.w,S.player.h);x.shadowBlur=0;
   x.fillStyle='#fff';x.fillRect(S.player.x+16,S.player.y+7,6,6);x.fillRect(S.player.x+16,S.player.y+16,6,6);
   x.fillStyle='#000';x.fillRect(S.player.x+19,S.player.y+9,3,3);x.fillRect(S.player.x+19,S.player.y+18,3,3);
+
+  // Tutorial text during intro
+  if(S.showTutorial) drawTutorial(x);
+}
+
+function drawTutorial(x){
+  let pulse=0.6+Math.sin(S.frame*0.06)*0.4;
+  let size=Math.round(18+Math.sin(S.frame*0.04)*3);
+  x.save();
+  x.globalAlpha=pulse;
+  x.fillStyle='#fff';
+  x.font='bold '+size+'px monospace';
+  x.textAlign='center';
+  x.shadowColor='#4ecdc4';
+  x.shadowBlur=15;
+  x.fillText('HOLD DOWN',GW/2,GH*0.35);
+  x.fillText('JUMP TO',GW/2,GH*0.35+size+8);
+  x.fillText('JUMP HIGHER',GW/2,GH*0.35+(size+8)*2);
+  x.shadowBlur=0;
+  x.restore();
 }
 
 // ============================================================
@@ -385,6 +407,7 @@ function draw3D(){
   ctx.clearRect(0,0,GW,GH);
   for(let f of S.floats){ctx.globalAlpha=f.life/40;ctx.fillStyle=f.color;ctx.font='bold 14px monospace';ctx.fillText(f.text,f.x,f.y)}
   ctx.globalAlpha=1;
+  if(S.showTutorial) drawTutorial(ctx);
 }
 
 // ============================================================
