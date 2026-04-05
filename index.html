@@ -134,8 +134,11 @@ function buildLevel(){
     // Intro: no coins, show tutorial
     showOverlay(['HOLD DOWN','JUMP TO','JUMP HIGHER'],'#fff');
   } else if(S.stage==='enemies'){
-    // Enemy level: mega platform with enemies
-    let megaW=(GW*3+Math.random()*GW)*scale;
+    // Enemy level: mega platform(s) with enemies
+    // In 2D mode, generate multiple mega-platforms instead of scaling one
+    let megaCount=S.mode==='2d'?2:1;
+    for(let mi=0;mi<megaCount;mi++){
+    let megaW=GW*3+Math.random()*GW;
     let mp={x:last.x+last.w,y:last.y,w:megaW,h:CONFIG.platH,color:rc(),mesh:null};
     S.platforms.push(mp);
     let n=2+Math.floor(Math.random()*2+d*2);
@@ -151,6 +154,7 @@ function buildLevel(){
       spawnCoin(cx,mp.y-30,Math.random()<0.2);
     }
     last=mp;
+    }
   } else {
     // Gap level: series of platforms, count grows with level
     let count=Math.round((8+lvl*2)*scale);
