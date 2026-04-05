@@ -649,7 +649,7 @@ function showTitleScreen(){
   S.platforms=[];S.coins=[];S.enemies=[];S.particles=[];S.floats=[];
   S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.waiting=true;S.demo=true;S.frame=0;
   S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;S.paused=false;S.charging=false;S.chargeStart=0;
-  S.demoNext=60;S.demoCharging=false;
+  S.demoGroup=null;S.demoState='idle';S.demoTimer=30;
   S.mode='2d';S.tCamH=600;S.tCamA=1.2;S.camH=600;S.camA=1.2;S.groundY=0;
   S.camYOffset=0;S.camLookYOffset=0;S.camXOffset=0;S.camZExtra=0;
   document.getElementById('msg').style.display='block';
@@ -669,28 +669,98 @@ function showTitleScreen(){
   }
 }
 
-// Demo AI: random jump variations
+// Demo AI: scripted jump sequences
+// Full charge = 15 frames. Sequences are arrays of {hold, wait} in frames.
+function makeDemoSequence(){
+  let FC=15; // full charge frames
+  let type=Math.floor(Math.random()*3);
+  let seq=[];
+  if(type===0){
+    // Normal jump: varied hold from quick tap to long squish
+    seq.push({hold:Math.round(2+Math.random()*FC*2), wait:0});
+  } else if(type===1){
+    // Double jump
+    seq.push({hold:Math.round(FC*(0.75+Math.random()*0.75)), wait:0});
+    seq.push({hold:Math.round(FC*Math.random()*0.5), wait:2+Math.round(Math.random()*4)});
+  } else {
+    // Stored charge (triple)
+    seq.push({hold:Math.round(FC*(0.75+Math.random()*0.75)), wait:0});
+    seq.push({hold:Math.round(FC*Math.random()*0.5), wait:2+Math.round(Math.random()*4)});
+    seq.push({hold:Math.round(FC*(0.25+Math.random()*0.75)), wait:2+Math.round(Math.random()*3)});
+  }
+  return seq;
+}
+
+// Grouping: 1-3 sequences with short pauses, then a longer rest
+function makeDemoGroup(){
+  let groupSize=1+Math.floor(Math.random()*3); // 1, 2, or 3 sequences
+  let group=[];
+  for(let i=0;i<groupSize;i++){
+    if(i>0) group.push({type:'rest',frames:15+Math.round(Math.random()*20)}); // short pause between grouped jumps
+    group.push({type:'seq',seq:makeDemoSequence()});
+  }
+  group.push({type:'rest',frames:40+Math.round(Math.random()*50)}); // longer rest after group
+  return group;
+}
+
 function demoUpdate(){
   if(!S.demo) return;
-  S.demoNext--;
-  if(S.demoNext<=0&&!S.demoCharging&&(S.player.onGround||S.player.jumpsUsed<2)){
-    // Start charging
-    S.charging=true;
-    S.chargeStart=S.frame;
-    S.demoCharging=true;
-    S.demoHoldTime=3+Math.floor(Math.random()*12); // random charge duration
-  }
-  if(S.demoCharging){
-    S.demoHoldTime--;
-    if(S.demoHoldTime<=0){
-      // Release
-      jEnd();
-      S.demoCharging=false;
-      S.demoNext=20+Math.floor(Math.random()*60); // random wait before next jump
+  if(S.player.y>GH) S.over=false;
+
+  if(!S.demoGroup||S.demoGroup.length===0) S.demoGroup=makeDemoGroup();
+  if(!S.demoState) S.demoState='idle';
+
+  if(S.demoState==='idle'){
+    let item=S.demoGroup[0];
+    if(item.type==='rest'){
+      S.demoState='resting';
+      S.demoTimer=item.frames;
+      S.demoGroup.shift();
+    } else {
+      S.demoSeq=item.seq;
+      S.demoSeqIdx=0;
+      S.demoState='waitForGround';
+      S.demoGroup.shift();
     }
   }
-  // Prevent game over in demo
-  if(S.player.y>GH) S.over=false;
+
+  if(S.demoState==='resting'){
+    S.demoTimer--;
+    if(S.demoTimer<=0) S.demoState='idle';
+  }
+
+  if(S.demoState==='waitForGround'){
+    if(S.player.onGround){
+      S.demoState='preWait';
+      S.demoTimer=0; // no wait before first jump in sequence
+    }
+  }
+
+  if(S.demoState==='preWait'){
+    if(S.demoTimer<=0){
+      // Start charging
+      S.charging=true;
+      S.chargeStart=S.frame;
+      S.demoState='holding';
+      S.demoTimer=Math.max(2,S.demoSeq[S.demoSeqIdx].hold);
+    } else {
+      S.demoTimer--;
+    }
+  }
+
+  if(S.demoState==='holding'){
+    S.demoTimer--;
+    if(S.demoTimer<=0){
+      jEnd();
+      S.demoSeqIdx++;
+      if(S.demoSeqIdx<S.demoSeq.length){
+        S.demoState='preWait';
+        S.demoTimer=S.demoSeq[S.demoSeqIdx].wait||0;
+      } else {
+        S.demoState='idle';
+      }
+    }
+  }
 }
 
 function init(){
