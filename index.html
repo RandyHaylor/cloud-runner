@@ -387,9 +387,15 @@ function draw2D(){
   for(let p of S.particles){x.globalAlpha=p.life/20;x.fillStyle=p.color;x.fillRect(p.x,p.y,p.sz,p.sz)}x.globalAlpha=1;
   for(let f of S.floats){x.globalAlpha=f.life/40;x.fillStyle=f.color;x.font='bold 14px monospace';x.fillText(f.text,f.x,f.y)}x.globalAlpha=1;
 
+  x.save();
+  let pcx=S.player.x+S.player.w/2,pcy=S.player.y+S.player.h/2;
+  x.translate(pcx,pcy);
+  x.rotate(S.player.vy*0.02);
+  x.translate(-pcx,-pcy);
   x.fillStyle='#00ff88';x.shadowColor='#00ff88';x.shadowBlur=15;x.fillRect(S.player.x,S.player.y,S.player.w,S.player.h);x.shadowBlur=0;
   x.fillStyle='#fff';x.fillRect(S.player.x+16,S.player.y+7,6,6);x.fillRect(S.player.x+16,S.player.y+16,6,6);
   x.fillStyle='#000';x.fillRect(S.player.x+19,S.player.y+9,3,3);x.fillRect(S.player.x+19,S.player.y+18,3,3);
+  x.restore();
 
 }
 
