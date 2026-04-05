@@ -210,23 +210,21 @@ function jStart(){
   S.charging=true;
   S.chargeStart=S.frame;
 }
-function nearGround(){
+function canJump(){
   if(S.player.onGround) return true;
-  let threshold=S.player.h*0.5;
-  let feet=S.player.y+S.player.h;
-  for(let p of S.platforms){
-    if(S.player.x+S.player.w>p.x&&S.player.x<p.x+p.w&&feet>=p.y-threshold&&feet<=p.y+p.h+10) return true;
-  }
-  return false;
+  if(!S.player.jumpsUsed) S.player.jumpsUsed=0;
+  return S.player.jumpsUsed<2;
 }
 function jEnd(){
-  if(S.charging&&nearGround()){
-    // Jump fires if on or near ground at release
+  if(S.charging&&canJump()){
+    // Jump fires on ground or as double jump in air
     let held=Math.min((S.frame-S.chargeStart)/15,1);
     let power=CONFIG.jumpCutoff+(CONFIG.jumpForce-CONFIG.jumpCutoff)*held;
     S.player.vy=power;
     S.player.onGround=false;
     S.jumping=true;
+    if(!S.player.jumpsUsed) S.player.jumpsUsed=0;
+    S.player.jumpsUsed++;
     S.player.squash=0.2;
     for(let i=0;i<8;i++) S.particles.push({x:S.player.x+14,y:S.player.y+28,vx:(Math.random()-0.5)*4,vy:Math.random()*-3,life:15,color:'#00ff88',sz:3+Math.random()*3});
   }
@@ -305,7 +303,7 @@ function update(){
   for(let p of S.platforms){
     if(S.player.vy>=0&&S.player.x+S.player.w>p.x&&S.player.x<p.x+p.w
       &&S.player.y+S.player.h>=p.y&&S.player.y+S.player.h<=p.y+p.h+10){
-      S.player.y=p.y-S.player.h;S.player.vy=0;S.player.onGround=true;S.player.gndY=p.y;
+      S.player.y=p.y-S.player.h;S.player.vy=0;S.player.onGround=true;S.player.gndY=p.y;S.player.jumpsUsed=0;
     }
   }
 
