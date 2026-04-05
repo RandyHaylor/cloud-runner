@@ -218,28 +218,35 @@ function nearGround(){
   }
   return false;
 }
-function canJump(){
-  if(S.player.onGround||nearGround()) return true;
-  if(!S.player.jumpsUsed) S.player.jumpsUsed=0;
-  return S.player.jumpsUsed<2;
+function doJump(power){
+  S.player.vy=power;
+  S.player.onGround=false;
+  S.player.squash=0.2;
+  S.player.jumpsUsed=(S.player.jumpsUsed||0)+1;
+  for(let i=0;i<8;i++) S.particles.push({x:S.player.x+14,y:S.player.y+28,vx:(Math.random()-0.5)*4,vy:Math.random()*-3,life:15,color:'#00ff88',sz:3+Math.random()*3});
+}
+function getChargePower(){
+  let held=Math.min((S.frame-S.chargeStart)/15,1);
+  return CONFIG.jumpCutoff+(CONFIG.jumpForce-CONFIG.jumpCutoff)*held;
 }
 function jEnd(){
-  if(S.charging&&canJump()){
-    // Jump fires on ground or as double jump in air
-    let held=Math.min((S.frame-S.chargeStart)/15,1);
-    let power=CONFIG.jumpCutoff+(CONFIG.jumpForce-CONFIG.jumpCutoff)*held;
-    S.player.vy=power;
-    S.player.onGround=false;
-    S.jumping=true;
-    if(!S.player.jumpsUsed) S.player.jumpsUsed=0;
-    S.player.jumpsUsed++;
-    S.player.squash=0.2;
-    for(let i=0;i<8;i++) S.particles.push({x:S.player.x+14,y:S.player.y+28,vx:(Math.random()-0.5)*4,vy:Math.random()*-3,life:15,color:'#00ff88',sz:3+Math.random()*3});
+  if(!S.charging){return}
+  let power=getChargePower();
+  let onOrNear=S.player.onGround||nearGround();
+  let jumps=S.player.jumpsUsed||0;
+
+  if(onOrNear){
+    // Ground jump (or forgiveness near ground)
+    doJump(power);
+  } else if(jumps<2){
+    // Double jump in air
+    doJump(power);
+  } else {
+    // Past double jump — store power for auto-jump on landing
+    S.player.storedPower=power;
   }
-  // Release always stops charging (squish springs back)
   S.charging=false;
   S.held=false;
-  S.jumping=false;
 }
 function togglePause(){
   S.paused=!S.paused;
@@ -311,7 +318,13 @@ function update(){
   for(let p of S.platforms){
     if(S.player.vy>=0&&S.player.x+S.player.w>p.x&&S.player.x<p.x+p.w
       &&S.player.y+S.player.h>=p.y&&S.player.y+S.player.h<=p.y+p.h+10){
-      S.player.y=p.y-S.player.h;S.player.vy=0;S.player.onGround=true;S.player.gndY=p.y;S.player.jumpsUsed=0;
+      S.player.y=p.y-S.player.h;S.player.vy=0;S.player.onGround=true;S.player.gndY=p.y;
+      S.player.jumpsUsed=0;
+      // Fire stored jump on landing
+      if(S.player.storedPower){
+        doJump(S.player.storedPower);
+        S.player.storedPower=0;
+      }
     }
   }
 
