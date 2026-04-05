@@ -25,7 +25,7 @@ canvas{display:block;position:absolute;top:0;left:0;z-index:0}
   </div>
   <div id="debug" style="display:none"></div>
   <div id="msg"></div>
-  <button id="pause">&#10074;&#10074;</button>
+  <button id="pause">II</button>
   <button id="jump">JUMP</button>
   <canvas id="canvas2d"></canvas>
   <canvas id="overlay" style="z-index:50;pointer-events:none"></canvas>
@@ -210,7 +210,7 @@ function jEnd(){
 }
 function togglePause(){
   S.paused=!S.paused;
-  document.getElementById('pause').innerHTML=S.paused?'&#9654;':'&#10074;&#10074;';
+  document.getElementById('pause').textContent=S.paused?'PLAY':'II';
 }
 
 function setupInput(){
