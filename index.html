@@ -329,7 +329,7 @@ function update(){
   }
 
   // LEVEL END CHECK — player physically reaches the marker platform
-  for(let p of S.platforms){
+  if(!S.demo) for(let p of S.platforms){
     if(p.levelEnd&&!p.fired&&S.player.x>p.x+p.w*0.3){
       p.fired=true;
       let wasIntro=S.stage==='intro';
@@ -397,8 +397,8 @@ function update(){
   S.enemies=S.enemies.filter(e=>{if(e.x<-500){if(e.mesh&&e.mesh.parent)scene.remove(e.mesh);if(e.shadow&&e.shadow.parent)scene.remove(e.shadow);return false}return true});
 
   // HUD
-  document.getElementById('scoreDisp').textContent='Score '+S.score;
-  document.getElementById('coinDisp').textContent=S.coinCount+' coins';
+  if(!S.demo){document.getElementById('scoreDisp').textContent='Score '+S.score;
+  document.getElementById('coinDisp').textContent=S.coinCount+' coins';}
 
   // Trail particles
   S.particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life--});
@@ -643,10 +643,11 @@ function clearScene(){
 
 function showTitleScreen(){
   clearScene();
-  S.player={x:GW*0.2,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false,gndY:GH*0.6};
+  S.player={x:GW*0.3,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false,gndY:GH*0.6,jumpsUsed:0,storedPower:0,squash:0};
   S.platforms=[];S.coins=[];S.enemies=[];S.particles=[];S.floats=[];
-  S.score=0;S.coinCount=0;S.speed=0;S.over=false;S.waiting=true;S.frame=0;
+  S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.waiting=true;S.demo=true;S.frame=0;
   S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;S.paused=false;S.charging=false;S.chargeStart=0;
+  S.demoNext=60;S.demoCharging=false;
   S.mode='2d';S.tCamH=600;S.tCamA=1.2;S.camH=600;S.camA=1.2;S.groundY=0;
   S.camYOffset=0;S.camLookYOffset=0;S.camXOffset=0;S.camZExtra=0;
   document.getElementById('msg').style.display='block';
@@ -656,16 +657,45 @@ function showTitleScreen(){
   document.getElementById('scoreDisp').textContent='';
   document.getElementById('coinDisp').textContent='';
   c2d.style.display='block';ren.domElement.style.display='none';
+  // Build long solid platform with random coins
   let y=GH*0.6;
-  S.platforms.push({x:0,y,w:GW*4,h:CONFIG.platH,color:rc(),mesh:null});
+  let platW=GW*50;
+  S.platforms.push({x:0,y,w:platW,h:CONFIG.platH,color:rc(),mesh:null});
   S.player.y=y-S.player.h;
+  for(let i=0;i<80;i++){
+    spawnCoin(200+i*120+Math.random()*60, y-30-Math.random()*40, Math.random()<0.15, y);
+  }
+}
+
+// Demo AI: random jump variations
+function demoUpdate(){
+  if(!S.demo) return;
+  S.demoNext--;
+  if(S.demoNext<=0&&!S.demoCharging&&(S.player.onGround||S.player.jumpsUsed<2)){
+    // Start charging
+    S.charging=true;
+    S.chargeStart=S.frame;
+    S.demoCharging=true;
+    S.demoHoldTime=3+Math.floor(Math.random()*12); // random charge duration
+  }
+  if(S.demoCharging){
+    S.demoHoldTime--;
+    if(S.demoHoldTime<=0){
+      // Release
+      jEnd();
+      S.demoCharging=false;
+      S.demoNext=20+Math.floor(Math.random()*60); // random wait before next jump
+    }
+  }
+  // Prevent game over in demo
+  if(S.player.y>GH) S.over=false;
 }
 
 function init(){
   clearScene();
   S.player={x:GW*0.2,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false,gndY:GH*0.6};
   S.platforms=[];S.coins=[];S.enemies=[];S.particles=[];S.floats=[];
-  S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.waiting=false;S.frame=0;
+  S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.waiting=false;S.demo=false;S.frame=0;
   S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;S.paused=false;S.charging=false;S.chargeStart=0;
   S.mode='2d';S.tCamH=600;S.tCamA=1.2;S.camH=600;S.camA=1.2;S.groundY=0;
   S.camYOffset=0;S.camLookYOffset=0;S.camXOffset=0;S.camZExtra=0;
@@ -684,7 +714,7 @@ function init(){
 }
 
 function loop(){
-  if(!S.over&&!S.paused&&!S.waiting) update();
+  if(!S.over&&!S.paused&&(!S.waiting||S.demo)){demoUpdate();update();}
   if(S.mode==='3d') draw3D(); else draw2D();
   drawOverlay();
   requestAnimationFrame(loop);
