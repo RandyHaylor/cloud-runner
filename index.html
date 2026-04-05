@@ -445,11 +445,10 @@ let pmats={};function gpm(c){
 }
 // Shadow system — solid black circles that shrink with height
 const shadowGeo=new THREE.CircleGeometry(1,16);
-const shadowMatBase=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,depthWrite:false,depthTest:false});
+const shadowMatBase=new THREE.MeshBasicMaterial({color:0x000000,transparent:true,depthWrite:false});
 function makeShadow(){
   let m=new THREE.Mesh(shadowGeo,shadowMatBase.clone());
   m.rotation.x=-Math.PI/2;
-  m.renderOrder=-1;
   scene.add(m);
   return m;
 }
@@ -505,7 +504,10 @@ function draw3D(){
     let cy=c.y+Math.sin(S.frame*0.08+c.bob)*5;
     if(!c.mesh){c.mesh=new THREE.Mesh(new THREE.SphereGeometry(c.big?10:7,12,12),c.big?bigCoinMat:coinMat);scene.add(c.mesh);c.shadow=makeShadow()}
     c.mesh.position.set(c.x+c.w/2,-(cy+c.h/2),0);c.mesh.rotation.y=S.frame*0.05;
-    updateShadow(c.shadow,c.x,cy,c.gndY,c.w);
+    // Hide coin shadow if player overlaps it horizontally (prevents bleed-through)
+    let coinCx=c.x+c.w/2,plCx=S.player.x+S.player.w/2;
+    if(Math.abs(coinCx-plCx)<S.player.w) c.shadow.visible=false;
+    else updateShadow(c.shadow,c.x,cy,c.gndY,c.w);
   }
   for(let e of S.enemies){
     if(e.fly){
@@ -522,10 +524,8 @@ function draw3D(){
   }
 
   ren.render(scene,camera);
-  // 2D overlay: particles + float text on transparent canvas
+  // 2D overlay: float text only (particles don't map to 3D coordinates)
   ctx.clearRect(0,0,GW,GH);
-  for(let p of S.particles){ctx.globalAlpha=p.life/20;ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.sz,p.sz)}
-  ctx.globalAlpha=1;
   for(let f of S.floats){ctx.globalAlpha=f.life/40;ctx.fillStyle=f.color;ctx.font='bold 14px monospace';ctx.fillText(f.text,f.x,f.y)}
   ctx.globalAlpha=1;
 }
