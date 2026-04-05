@@ -9,10 +9,10 @@
 body{background:#000;overflow:hidden;touch-action:none;display:flex;justify-content:center;align-items:center;height:100vh}
 #game-container{position:relative;width:400px;height:711px;overflow:hidden;background:#1a1a2e;border-radius:8px}
 canvas{display:block;position:absolute;top:0;left:0;z-index:0}
-#jump{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);color:#fff;font-size:24px;cursor:pointer;z-index:100;-webkit-tap-highlight-color:transparent}
-#hud{position:absolute;top:70px;right:15px;color:#fff;font:bold 18px monospace;z-index:100;text-align:right;text-shadow:0 0 8px rgba(0,0,0,0.8)}
+#jump{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);color:#fff;font-size:24px;cursor:pointer;z-index:100;-webkit-tap-highlight-color:transparent}
+#hud{position:absolute;top:40px;right:15px;color:#fff;font:bold 18px monospace;z-index:100;text-align:right;text-shadow:0 0 8px rgba(0,0,0,0.8)}
 #msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font:bold 28px monospace;z-index:100;display:none;text-align:center}
-#debug{position:absolute;top:70px;left:10px;color:rgba(255,255,255,0.6);font:12px monospace;z-index:100}
+#debug{position:absolute;top:40px;left:10px;color:rgba(255,255,255,0.6);font:12px monospace;z-index:100}
 </style>
 </head>
 <body>
@@ -95,12 +95,15 @@ function buildLevel(){
   spawnCoinsOn({x:safe.x+safeW*0.5,y:safe.y,w:safeW*0.3,h:0});
   last=safe;
 
+  // 2D levels need 2.4x more distance to feel equal to 3D
+  let scale=S.mode==='2d'?2.4:1;
+
   if(S.stage==='intro'){
     // Intro: just the safe platform with extra coins
     spawnCoinsOn({x:safe.x+safeW*0.2,y:safe.y,w:safeW*0.3,h:0});
   } else if(S.stage==='enemies'){
     // Enemy level: mega platform with enemies
-    let megaW=GW*3+Math.random()*GW;
+    let megaW=(GW*3+Math.random()*GW)*scale;
     let mp={x:last.x+last.w,y:last.y,w:megaW,h:CONFIG.platH,color:rc(),mesh:null};
     S.platforms.push(mp);
     let n=2+Math.floor(Math.random()*2+d*2);
@@ -118,7 +121,7 @@ function buildLevel(){
     last=mp;
   } else {
     // Gap level: series of platforms, count grows with level
-    let count=8+lvl*2;
+    let count=Math.round((8+lvl*2)*scale);
     for(let i=0;i<count;i++){
       let mg=maxGap();
       let gap=50+d*(mg-50)+Math.random()*20;
@@ -395,7 +398,7 @@ function clearScene(){
 
 function init(){
   clearScene();
-  S.player={x:GW*0.25,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false};
+  S.player={x:GW*0.3,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false};
   S.platforms=[];S.coins=[];S.enemies=[];S.particles=[];S.floats=[];
   S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.frame=0;
   S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;
