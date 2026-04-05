@@ -201,22 +201,22 @@ function buildLevel(stageOverride){
 // ============================================================
 function jStart(){
   if(S.over){init();return}
-  if(S.player.onGround){
-    S.charging=true;
-    S.chargeStart=S.frame;
-  }
+  // Can start charging anytime (ground or air)
+  S.charging=true;
+  S.chargeStart=S.frame;
 }
 function jEnd(){
   if(S.charging&&S.player.onGround){
-    // Jump power based on charge time (0.15s to 0.5s mapped to cutoff to full)
+    // Jump fires only if on ground at release
     let held=Math.min((S.frame-S.chargeStart)/15,1);
     let power=CONFIG.jumpCutoff+(CONFIG.jumpForce-CONFIG.jumpCutoff)*held;
     S.player.vy=power;
     S.player.onGround=false;
     S.jumping=true;
-    S.player.squash=0.2; // quick unsquish on release
+    S.player.squash=0.2;
     for(let i=0;i<8;i++) S.particles.push({x:S.player.x+14,y:S.player.y+28,vx:(Math.random()-0.5)*4,vy:Math.random()*-3,life:15,color:'#00ff88',sz:3+Math.random()*3});
   }
+  // Release always stops charging (squish springs back)
   S.charging=false;
   S.held=false;
   S.jumping=false;
