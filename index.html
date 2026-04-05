@@ -6,7 +6,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <style>
 *{margin:0;padding:0}
-body{background:#000;overflow:hidden;touch-action:none;display:flex;justify-content:center;align-items:center;height:100vh}
+body{background:#000;overflow:hidden;touch-action:none;display:flex;justify-content:center;align-items:flex-start;padding-top:env(safe-area-inset-top,10px);height:100dvh}
 #game-container{position:relative;width:400px;height:711px;overflow:hidden;background:#1a1a2e;border-radius:8px}
 canvas{display:block;position:absolute;top:0;left:0;z-index:0}
 #jump{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);color:#fff;font-size:24px;cursor:pointer;z-index:100;-webkit-tap-highlight-color:transparent}
