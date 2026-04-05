@@ -200,7 +200,12 @@ function buildLevel(stageOverride){
 // INPUT
 // ============================================================
 function jStart(){
-  if(S.over){init();return}
+  if(S.over||S.waiting){
+    S.over=false;S.waiting=false;
+    document.getElementById('msg').style.display='none';
+    document.getElementById('jump').textContent='JUMP';
+    init();return;
+  }
   // Can start charging anytime (ground or air)
   S.charging=true;
   S.chargeStart=S.frame;
@@ -353,7 +358,7 @@ function update(){
       S.over=true;
       for(let j=0;j<15;j++) S.particles.push({x:S.player.x+14,y:S.player.y+14,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8,life:30,color:'#ff0044',sz:4});
       document.getElementById('msg').style.display='block';
-      document.getElementById('msg').innerHTML='GAME OVER<br><span style="font-size:16px">Score: '+S.score+' | Coins: '+S.coinCount+' | Level: '+S.stageNum+'<br>Tap to restart</span>';
+      document.getElementById('msg').innerHTML='GAME OVER<br><span style="font-size:16px">Score: '+S.score+' | Coins: '+S.coinCount+' | Level: '+S.stageNum+'</span>';document.getElementById('jump').textContent='START';
       return;
     }
   }
@@ -376,7 +381,7 @@ function update(){
   // Fall death
   if(S.player.y>GH+50){
     S.over=true;document.getElementById('msg').style.display='block';
-    document.getElementById('msg').innerHTML='GAME OVER<br><span style="font-size:16px">Score: '+S.score+' | Coins: '+S.coinCount+' | Level: '+S.stageNum+'<br>Tap to restart</span>';
+    document.getElementById('msg').innerHTML='GAME OVER<br><span style="font-size:16px">Score: '+S.score+' | Coins: '+S.coinCount+' | Level: '+S.stageNum+'</span>';document.getElementById('jump').textContent='START';
   }
 }
 
@@ -607,11 +612,31 @@ function clearScene(){
   for(let e of S.enemies) if(e.mesh&&e.mesh.parent) scene.remove(e.mesh);
 }
 
+function showTitleScreen(){
+  clearScene();
+  S.player={x:GW*0.2,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false,gndY:GH*0.6};
+  S.platforms=[];S.coins=[];S.enemies=[];S.particles=[];S.floats=[];
+  S.score=0;S.coinCount=0;S.speed=0;S.over=false;S.waiting=true;S.frame=0;
+  S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;S.paused=false;S.charging=false;S.chargeStart=0;
+  S.mode='2d';S.tCamH=600;S.tCamA=1.2;S.camH=600;S.camA=1.2;S.groundY=0;
+  S.camYOffset=0;S.camLookYOffset=0;S.camXOffset=0;S.camZExtra=0;
+  document.getElementById('msg').style.display='block';
+  document.getElementById('msg').innerHTML='CLOUD RUNNER<br><span style="font-size:16px">Press START</span>';
+  document.getElementById('jump').textContent='START';
+  document.getElementById('levelDisp').textContent='';
+  document.getElementById('scoreDisp').textContent='';
+  document.getElementById('coinDisp').textContent='';
+  c2d.style.display='block';ren.domElement.style.display='none';
+  let y=GH*0.6;
+  S.platforms.push({x:0,y,w:GW*4,h:CONFIG.platH,color:rc(),mesh:null});
+  S.player.y=y-S.player.h;
+}
+
 function init(){
   clearScene();
   S.player={x:GW*0.2,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false,gndY:GH*0.6};
   S.platforms=[];S.coins=[];S.enemies=[];S.particles=[];S.floats=[];
-  S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.frame=0;
+  S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.waiting=false;S.frame=0;
   S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;S.paused=false;S.charging=false;S.chargeStart=0;
   S.mode='2d';S.tCamH=600;S.tCamA=1.2;S.camH=600;S.camA=1.2;S.groundY=0;
   S.camYOffset=0;S.camLookYOffset=0;S.camXOffset=0;S.camZExtra=0;
@@ -619,7 +644,6 @@ function init(){
   document.getElementById('levelDisp').textContent='Get Ready';
   document.getElementById('scoreDisp').textContent='Score 0';
   document.getElementById('coinDisp').textContent='0 coins';
-  document.getElementById('debug').textContent='3D';
   c2d.style.display='block';ren.domElement.style.display='none';
 
   // Small starting pad, then buildLevel creates the intro content
@@ -631,7 +655,7 @@ function init(){
 }
 
 function loop(){
-  if(!S.over&&!S.paused) update();
+  if(!S.over&&!S.paused&&!S.waiting) update();
   if(S.mode==='3d') draw3D(); else draw2D();
   drawOverlay();
   requestAnimationFrame(loop);
@@ -639,7 +663,7 @@ function loop(){
 
 let gc=document.getElementById('game-container');
 gc.appendChild(ren.domElement);
-setupInput();init();loop();
+setupInput();showTitleScreen();loop();
 </script>
 </body>
 </html>
