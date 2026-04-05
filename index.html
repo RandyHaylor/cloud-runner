@@ -116,7 +116,14 @@ function spawnFlyer(x,py){
 // LEVEL BUILDING — generates all platforms for a level at once
 // Places a levelEnd marker at the end. Level switches when player reaches it.
 // ============================================================
-function buildLevel(){
+function nextStageType(st){
+  if(st==='intro') return 'gaps';
+  if(st==='gaps') return 'enemies';
+  return 'gaps';
+}
+
+function buildLevel(stageOverride){
+  let stage=stageOverride||S.stage;
   let last=S.platforms[S.platforms.length-1];
   let lvl=S.stageNum;
   let d=Math.min(lvl/20,1);
@@ -126,7 +133,7 @@ function buildLevel(){
   let ny=Math.max(GH*0.35,Math.min(GH*0.8,last.y));
   let safe={x:last.x+last.w,y:ny,w:safeW,h:CONFIG.platH,color:rc(),mesh:null};
   S.platforms.push(safe);
-  if(S.stage!=='intro'){
+  if(stage!=='intro'){
     spawnCoinsOn({x:safe.x+50,y:safe.y,w:safeW*0.3,h:0});
     spawnCoinsOn({x:safe.x+safeW*0.5,y:safe.y,w:safeW*0.3,h:0});
   }
@@ -135,10 +142,10 @@ function buildLevel(){
   // 2D levels need 2.4x more distance to feel equal to 3D
   let scale=S.mode==='2d'?2.4:1;
 
-  if(S.stage==='intro'){
+  if(stage==='intro'){
     // Intro: no coins, show tutorial
     showOverlay(['HOLD DOWN','JUMP TO','JUMP HIGHER'],'#fff');
-  } else if(S.stage==='enemies'){
+  } else if(stage==='enemies'){
     // Enemy level: mega platform(s) with enemies
     // In 2D mode, generate multiple mega-platforms instead of scaling one
     let megaCount=S.mode==='2d'?2:1;
@@ -179,7 +186,7 @@ function buildLevel(){
   // Level-end marker: dark platform, triggers level switch when player reaches it
   let endW=GW*1.5;
   let endY=Math.max(GH*0.35,Math.min(GH*0.8,last.y));
-  let gap=S.stage==='gaps'?80:0;
+  let gap=stage==='gaps'?80:0;
   S.platforms.push({x:last.x+last.w+gap,y:endY,w:endW,h:CONFIG.platH,color:'#1a1a2e',mesh:null,levelEnd:true,fired:false});
 }
 
@@ -288,6 +295,7 @@ function update(){
       document.getElementById('levelDisp').textContent='Level '+S.stageNum;
       switchMode();
       buildLevel();
+      buildLevel(nextStageType(S.stage));  // pre-build next level ahead
     }
   }
 
@@ -373,7 +381,7 @@ function draw2D(){
 // 3D SETUP & RENDERER
 // ============================================================
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(60,GW/GH,1,5000);
+const camera=new THREE.PerspectiveCamera(60,GW/GH,1,8000);
 const ren=new THREE.WebGLRenderer({antialias:true});
 ren.setSize(GW,GH);ren.setPixelRatio(window.devicePixelRatio);
 ren.domElement.style.position='absolute';ren.domElement.style.top='0';ren.domElement.style.left='0';ren.domElement.style.zIndex='0';
@@ -381,7 +389,7 @@ ren.domElement.style.position='absolute';ren.domElement.style.top='0';ren.domEle
 scene.add(new THREE.AmbientLight(0x404060,0.6));
 let dl=new THREE.DirectionalLight(0xffffff,0.8);dl.position.set(200,-300,500);scene.add(dl);
 const plight=new THREE.PointLight(0x00ff88,1,500);scene.add(plight);
-scene.background=new THREE.Color(0x0f0c29);scene.fog=new THREE.Fog(0x0f0c29,800,2000);
+scene.background=new THREE.Color(0x0f0c29);scene.fog=new THREE.Fog(0x0f0c29,1500,4000);
 
 let sv=[];for(let i=0;i<200;i++)sv.push((Math.random()-0.5)*2000,-(Math.random()*800),(Math.random()-0.5)*1000-200);
 let sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sv,3));
@@ -407,7 +415,7 @@ function draw3D(){
   if(S.player.onGround) S.groundY+=(-S.player.y-S.groundY)*0.05;
   let px=S.player.x,py=S.groundY;
   // Over-the-shoulder: tight behind player, nearly straight ahead
-  camera.position.set(px-120+S.camXOffset, py+30+S.camYOffset, 30+S.camZExtra);
+  camera.position.set(px-150+S.camXOffset, py+40+S.camYOffset, 50+S.camZExtra);
   camera.lookAt(px+400+S.camXOffset*0.5, py+S.camLookYOffset, 0);
   plight.position.set(px,-S.player.y+20,30);
   pmesh.position.set(px+14,-S.player.y-14,0);pmesh.rotation.z=S.player.vy*0.02;
@@ -468,7 +476,8 @@ function init(){
   let y=GH*0.7;
   S.platforms.push({x:0,y,w:200,h:CONFIG.platH,color:rc(),mesh:null});
   S.player.y=y-S.player.h;
-  buildLevel();
+  buildLevel();              // builds intro
+  buildLevel('gaps');         // pre-builds level 1 ahead
 }
 
 function loop(){
