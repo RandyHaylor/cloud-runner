@@ -89,14 +89,14 @@ function drawWrappedText(ctx,lines,x,startY,font,color,maxW,lineH,gapH){
 function drawHelpScreen(){
   ox.save();
   ox.fillStyle='rgba(0,0,0,0.75)';ox.fillRect(0,0,GW,GH);
-  let y=30;
+  let y=80;
   ox.fillStyle='#4ecdc4';ox.font='bold 20px monospace';ox.textAlign='center';
   ox.fillText('SQUEEZE BOX',GW/2,y);y+=25;
   ox.fillStyle='#fff';ox.font='bold 14px monospace';
   ox.fillText('HOW TO PLAY',GW/2,y);y+=25;
 
   // Jump tips
-  y=drawWrappedText(ox,['Hold jump longer to jump higher','Immediately hold and release jump again in the air','Hold a third time before falling to store jump for when you hit the ground'],GW/2,y,'bold 13px monospace','#fff',GW-40,17,24);
+  y=drawWrappedText(ox,['Hold jump longer to jump higher','Immediately hold and release jump again in the air','Hold a third time before falling to store jump for when you hit the ground'],GW/2,y,'bold 13px monospace','#fff',GW-20,17,24);
   y+=10;
 
   // Coins section
