@@ -150,9 +150,9 @@ function buildLevel(stageOverride){
   } else if(stage==='enemies'){
     // Enemy level: mega platform(s) with enemies
     // In 2D mode, generate multiple mega-platforms instead of scaling one
-    let megaCount=S.mode==='2d'?3:2;
+    let megaCount=S.mode==='2d'?2:1;
     for(let mi=0;mi<megaCount;mi++){
-    let megaW=GW*3+Math.random()*GW;
+    let megaW=GW*6+Math.random()*GW*2;
     let mp={x:last.x+last.w,y:last.y,w:megaW,h:CONFIG.platH,color:rc(),mesh:null};
     S.platforms.push(mp);
     let n=2+Math.floor(Math.random()*2+d*2);
