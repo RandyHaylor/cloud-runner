@@ -402,7 +402,24 @@ let eyeL=new THREE.Mesh(new THREE.BoxGeometry(6,6,2),ewm);eyeL.position.set(4,5,
 eyeR.add(new THREE.Mesh(new THREE.BoxGeometry(3,3,2),ebm).translateZ(1));
 eyeL.add(new THREE.Mesh(new THREE.BoxGeometry(3,3,2),ebm).translateZ(1));
 
-let pmats={};function gpm(c){if(!pmats[c])pmats[c]=new THREE.MeshPhongMaterial({color:hex2c(c),shininess:40});return pmats[c]}
+// Grid texture for platforms
+function makeGridTex(color){
+  let cv=document.createElement('canvas');cv.width=64;cv.height=64;
+  let gx=cv.getContext('2d');
+  gx.fillStyle=color;gx.fillRect(0,0,64,64);
+  gx.strokeStyle='rgba(255,255,255,0.25)';gx.lineWidth=1;
+  for(let i=0;i<=64;i+=16){gx.beginPath();gx.moveTo(i,0);gx.lineTo(i,64);gx.stroke();gx.beginPath();gx.moveTo(0,i);gx.lineTo(64,i);gx.stroke()}
+  let tex=new THREE.CanvasTexture(cv);
+  tex.wrapS=THREE.RepeatWrapping;tex.wrapT=THREE.RepeatWrapping;
+  return tex;
+}
+let pmats={};function gpm(c){
+  if(!pmats[c]){
+    let tex=makeGridTex(c);
+    pmats[c]=new THREE.MeshPhongMaterial({map:tex,shininess:40});
+  }
+  return pmats[c];
+}
 const coinMat=new THREE.MeshPhongMaterial({color:0xffd700,emissive:0x443300,shininess:100});
 const bigCoinMat=new THREE.MeshPhongMaterial({color:0xff69b4,emissive:0x441133,shininess:100});
 const enemyMat=new THREE.MeshPhongMaterial({color:0xff0044,emissive:0x440011,shininess:60});
@@ -415,13 +432,19 @@ function draw3D(){
   if(S.player.onGround) S.groundY+=(-S.player.y-S.groundY)*0.05;
   let px=S.player.x,py=S.groundY;
   // Over-the-shoulder: tight behind player, nearly straight ahead
-  camera.position.set(px-150+S.camXOffset, py+40+S.camYOffset, 50+S.camZExtra);
-  camera.lookAt(px+400+S.camXOffset*0.5, py+S.camLookYOffset, 0);
+  camera.position.set(px-180+S.camXOffset, py+50+S.camYOffset, 65+S.camZExtra);
+  camera.lookAt(px+350+S.camXOffset*0.5, py-10+S.camLookYOffset, 0);
   plight.position.set(px,-S.player.y+20,30);
   pmesh.position.set(px+14,-S.player.y-14,0);pmesh.rotation.z=S.player.vy*0.02;
 
   for(let p of S.platforms){
-    if(!p.mesh){p.mesh=new THREE.Mesh(new THREE.BoxGeometry(p.w,p.h,CONFIG.platDepth),gpm(p.color));scene.add(p.mesh)}
+    if(!p.mesh){
+      let mat=gpm(p.color).clone();
+      mat.map=mat.map.clone();mat.map.needsUpdate=true;
+      mat.map.repeat.set(p.w/32,CONFIG.platDepth/32);
+      p.mesh=new THREE.Mesh(new THREE.BoxGeometry(p.w,p.h,CONFIG.platDepth),mat);
+      scene.add(p.mesh);
+    }
     p.mesh.position.set(p.x+p.w/2,-(p.y+p.h/2),0);
   }
   for(let c of S.coins){
