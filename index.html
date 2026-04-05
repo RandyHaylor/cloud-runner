@@ -421,39 +421,15 @@ let pmats={};function gpm(c){
   }
   return pmats[c];
 }
-// Shadow system
-// Height 0: solid black circle, no gradient
-// As height increases: solid center shrinks, gradient edge grows, overall fades
-function makeShadowTex(step){
-  let cv=document.createElement('canvas');cv.width=64;cv.height=64;
-  let gx=cv.getContext('2d');
-  let cx=32,cy=32,outerR=30;
-  // step 0-10: solidR goes from full radius to 0
-  let solidR=outerR*(1-step/10);
-  // Solid black center
-  if(solidR>0){
-    gx.fillStyle='rgba(0,0,0,1)';
-    gx.beginPath();gx.arc(cx,cy,solidR,0,6.28);gx.fill();
-  }
-  // Gradient ring from solidR to outerR
-  if(solidR<outerR){
-    let grad=gx.createRadialGradient(cx,cy,Math.max(0,solidR),cx,cy,outerR);
-    grad.addColorStop(0,'rgba(0,0,0,1)');
-    grad.addColorStop(1,'rgba(0,0,0,0)');
-    gx.fillStyle=grad;
-    gx.beginPath();gx.arc(cx,cy,outerR,0,6.28);gx.fill();
-  }
-  return new THREE.CanvasTexture(cv);
-}
-const shadowMats=[];
-for(let i=0;i<=10;i++){
-  let m=new THREE.MeshBasicMaterial({map:makeShadowTex(i),transparent:true,depthWrite:false});
-  shadowMats.push(m);
-}
-
+// Shadow system — computed every frame
+// Height 0: solid black circle. As height grows: solid center shrinks, gradient edge grows, fades.
 function makeShadow(){
-  let m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),shadowMats[0]);
+  let cv=document.createElement('canvas');cv.width=64;cv.height=64;
+  let tex=new THREE.CanvasTexture(cv);
+  let mat=new THREE.MeshBasicMaterial({map:tex,transparent:true,depthWrite:false});
+  let m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),mat);
   m.rotation.x=-Math.PI/2;
+  m.userData.cv=cv;m.userData.tex=tex;
   scene.add(m);
   return m;
 }
@@ -462,9 +438,23 @@ function updateShadow(mesh,objX,objY,groundY,objW){
   if(height<0) height=0;
   let scale=objW*(1+height*0.008);
   let alpha=Math.max(0.05,1-height*0.006);
-  let blurIdx=Math.min(10,Math.floor(height*0.08));
-  mesh.material=shadowMats[blurIdx];
-  mesh.material.opacity=alpha;
+  let cv=mesh.userData.cv,gx=cv.getContext('2d');
+  let cx=32,cy=32,outerR=30;
+  let blur=Math.min(height/120,1);
+  let solidR=outerR*(1-blur);
+  gx.clearRect(0,0,64,64);
+  if(solidR>0.5){
+    gx.fillStyle='rgba(0,0,0,'+alpha+')';
+    gx.beginPath();gx.arc(cx,cy,solidR,0,6.28);gx.fill();
+  }
+  if(solidR<outerR){
+    let grad=gx.createRadialGradient(cx,cy,Math.max(0,solidR),cx,cy,outerR);
+    grad.addColorStop(0,'rgba(0,0,0,'+alpha+')');
+    grad.addColorStop(1,'rgba(0,0,0,0)');
+    gx.fillStyle=grad;
+    gx.beginPath();gx.arc(cx,cy,outerR,0,6.28);gx.fill();
+  }
+  mesh.userData.tex.needsUpdate=true;
   mesh.scale.set(scale,scale,1);
   mesh.position.set(objX+objW/2,-(groundY-1),0);
   mesh.visible=alpha>0.05;
