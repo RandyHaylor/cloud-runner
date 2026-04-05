@@ -90,7 +90,7 @@ function drawOverlay(){
   ox.textAlign='center';
   ox.shadowColor='#4ecdc4';
   ox.shadowBlur=12;
-  ox.font='bold 11px monospace';
+  ox.font='bold 14px monospace';
   let baseY=GH*0.22;
   for(let i=0;i<overlayMsg.lines.length;i++){
     // Word wrap each line within game width
@@ -259,6 +259,8 @@ function jEnd(){
 function togglePause(){
   S.paused=!S.paused;
   document.getElementById('pause').innerHTML=S.paused?'<svg width="30" height="30" viewBox="0 0 30 30"><polygon points="8,4 8,26 26,15" fill="white"/></svg>':'<svg width="30" height="30" viewBox="0 0 30 30"><rect x="7" y="5" width="5" height="20" fill="white"/><rect x="18" y="5" width="5" height="20" fill="white"/></svg>';
+  if(S.paused) showOverlay(['Hold jump longer to jump higher','Immediately hold and release jump again in the air','Hold a third time before falling to store jump for when you hit the ground'],'#fff');
+  else hideOverlay();
 }
 
 function setupInput(){
