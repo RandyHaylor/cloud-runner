@@ -1,4 +1,4 @@
-# Cloud Runner
+# Squeeze Box
 
 Side-scrolling endless platformer with 2D/3D rendering that alternates every level. Single HTML file, no build step.
 
@@ -49,9 +49,13 @@ The game has four distinct concerns mixed into one file:
 
 ## Hosting
 
-- Developed on host at `/home/aikenyon/cloud-runner/`
-- Deployed to VM via git: `git push` then `/opt/deploy.sh` on VM
-- VM serves via nginx on port 80, exposed via ngrok
+- **GitHub Pages (production):** https://randyhaylor.github.io/squeezebox/
+  - Source: `RandyHaylor/RandyHaylor.github.io` repo, `squeezebox/` folder
+  - Local clone: `/home/aikenyon/RandyHaylor.github.io/`
+  - Copy `index.html` there and push to deploy
+- **Developed on host at** `/home/aikenyon/cloud-runner/`
+- **VM (dev/testing):** deployed via git: `git push` then `/opt/deploy.sh` on VM
+  - VM serves via nginx on port 80, exposed via ngrok
 - Game container is fixed 400x711px portrait layout
 
 ## Next Steps
