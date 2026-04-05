@@ -199,8 +199,9 @@ function buildLevel(stageOverride){
     let count=Math.round((8+lvl*2)*scale);
     for(let i=0;i<count;i++){
       let mg=maxGap();
-      let gap=50+d*(mg-50)+Math.random()*20;
-      let pny=last.y+(Math.random()*40-20);
+      let gapMul=Math.random()<0.1?1.5+Math.random()*0.5:1; // 10% chance of up to 2x wide gap
+      let gap=(50+d*(mg-50)+Math.random()*20)*gapMul;
+      let pny=last.y+(Math.random()*80-40);
       pny=Math.max(GH*0.35,Math.min(GH*0.62,pny));
       let nw=130+Math.random()*80;
       let np={x:last.x+last.w+gap,y:pny,w:nw,h:CONFIG.platH,color:rc(),mesh:null};
@@ -690,6 +691,7 @@ function showTitleScreen(){
   S.player.y=y-S.player.h;
   for(let i=0;i<80;i++){
     spawnCoin(200+i*120+Math.random()*60, y-30-Math.random()*40, Math.random()<0.15, y);
+    if(i%5===0) spawnCoinFormation(200+i*120+Math.random()*60, y);
   }
 }
 
