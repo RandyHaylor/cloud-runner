@@ -301,6 +301,8 @@ function update(){
   if(S.charging){
     let t=Math.min((S.frame-S.chargeStart)/15,1);
     S.player.squash=t*0.4; // max 40% squish
+  } else if(S.player.storedPower){
+    // Keep squished while stored power waiting for landing
   } else if(S.player.squash>0){
     S.player.squash=Math.max(0,S.player.squash-0.08); // quick spring back
   }
