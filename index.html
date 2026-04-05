@@ -135,7 +135,7 @@ function buildLevel(stageOverride){
 
   // Every level starts with a wide safe platform (2 screens)
   let safeW=GW*2;
-  let ny=Math.max(GH*0.35,Math.min(GH*0.72,last.y));
+  let ny=Math.max(GH*0.35,Math.min(GH*0.62,last.y));
   let safe={x:last.x+last.w,y:ny,w:safeW,h:CONFIG.platH,color:rc(),mesh:null};
   S.platforms.push(safe);
   if(stage!=='intro'){
@@ -180,7 +180,7 @@ function buildLevel(stageOverride){
       let mg=maxGap();
       let gap=50+d*(mg-50)+Math.random()*20;
       let pny=last.y+(Math.random()*40-20);
-      pny=Math.max(GH*0.35,Math.min(GH*0.72,pny));
+      pny=Math.max(GH*0.35,Math.min(GH*0.62,pny));
       let nw=130+Math.random()*80;
       let np={x:last.x+last.w+gap,y:pny,w:nw,h:CONFIG.platH,color:rc(),mesh:null};
       S.platforms.push(np);
@@ -191,7 +191,7 @@ function buildLevel(stageOverride){
 
   // Level-end marker: dark platform, triggers level switch when player reaches it
   let endW=GW*1.5;
-  let endY=Math.max(GH*0.35,Math.min(GH*0.72,last.y));
+  let endY=Math.max(GH*0.35,Math.min(GH*0.62,last.y));
   let gap=stage==='gaps'?80:0;
   S.platforms.push({x:last.x+last.w+gap,y:endY,w:endW,h:CONFIG.platH,color:'#1a1a2e',mesh:null,levelEnd:true,fired:false});
 }
@@ -386,7 +386,7 @@ function draw2D(){
   }
 
   for(let p of S.particles){x.globalAlpha=p.life/20;x.fillStyle=p.color;x.fillRect(p.x,p.y,p.sz,p.sz)}x.globalAlpha=1;
-  for(let f of S.floats){x.globalAlpha=f.life/40;x.fillStyle=f.color;x.font='bold 14px monospace';x.fillText(f.text,f.x,f.y)}x.globalAlpha=1;
+  for(let f of S.floats){x.globalAlpha=f.life/40;x.fillStyle=f.color;x.font='bold 28px monospace';x.fillText(f.text,f.x,f.y-30)}x.globalAlpha=1;
 
   x.save();
   let pcx=S.player.x+S.player.w/2,pcy=S.player.y+S.player.h/2;
@@ -570,7 +570,7 @@ function draw3D(){
   ren.render(scene,camera);
   // 2D overlay: float text only (particles don't map to 3D coordinates)
   ctx.clearRect(0,0,GW,GH);
-  for(let f of S.floats){ctx.globalAlpha=f.life/40;ctx.fillStyle=f.color;ctx.font='bold 14px monospace';ctx.fillText(f.text,f.x,f.y)}
+  for(let f of S.floats){ctx.globalAlpha=f.life/40;ctx.fillStyle=f.color;ctx.font='bold 28px monospace';ctx.fillText(f.text,f.x,f.y-30)}
   ctx.globalAlpha=1;
 }
 
@@ -585,7 +585,7 @@ function clearScene(){
 
 function init(){
   clearScene();
-  S.player={x:GW*0.2,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false,gndY:GH*0.7};
+  S.player={x:GW*0.2,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false,gndY:GH*0.6};
   S.platforms=[];S.coins=[];S.enemies=[];S.particles=[];S.floats=[];
   S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.frame=0;
   S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;S.paused=false;
@@ -599,7 +599,7 @@ function init(){
   c2d.style.display='block';ren.domElement.style.display='none';
 
   // Small starting pad, then buildLevel creates the intro content
-  let y=GH*0.7;
+  let y=GH*0.6;
   S.platforms.push({x:0,y,w:200,h:CONFIG.platH,color:rc(),mesh:null});
   S.player.y=y-S.player.h;
   buildLevel();              // builds intro
