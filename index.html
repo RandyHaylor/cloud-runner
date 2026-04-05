@@ -421,31 +421,40 @@ let pmats={};function gpm(c){
   }
   return pmats[c];
 }
-// Blob shadow system
-const shadowTex=(function(){
+// Blob shadow system — sharp when close, blurry when high
+function makeShadowTex(blur){
+  // blur 0 = sharp solid circle, blur 1 = fully gradient
   let cv=document.createElement('canvas');cv.width=32;cv.height=32;
   let gx=cv.getContext('2d');
-  let grad=gx.createRadialGradient(16,16,0,16,16,16);
-  grad.addColorStop(0,'rgba(0,0,0,0.6)');grad.addColorStop(1,'rgba(0,0,0,0)');
+  let innerR=16*(1-Math.min(blur,0.95));
+  let grad=gx.createRadialGradient(16,16,innerR,16,16,16);
+  grad.addColorStop(0,'rgba(0,0,0,0.9)');
+  grad.addColorStop(1,'rgba(0,0,0,0)');
+  gx.fillStyle='rgba(0,0,0,0.9)';
+  if(innerR>0){gx.beginPath();gx.arc(16,16,innerR,0,6.28);gx.fill()}
   gx.fillStyle=grad;gx.fillRect(0,0,32,32);
-  return new THREE.CanvasTexture(cv);
-})();
-const shadowMat=new THREE.MeshBasicMaterial({map:shadowTex,transparent:true,depthWrite:false});
+  let tex=new THREE.CanvasTexture(cv);
+  return tex;
+}
+const shadowMats=[];
+for(let i=0;i<=10;i++) shadowMats.push(new THREE.MeshBasicMaterial({map:makeShadowTex(i/10),transparent:true,depthWrite:false}));
+
 function makeShadow(){
-  let m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),shadowMat.clone());
+  let m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),shadowMats[0].clone());
   m.rotation.x=-Math.PI/2;
   scene.add(m);
   return m;
 }
-// Update shadow: objX, objY (game coords), groundY (platform Y), objW (width)
 function updateShadow(mesh,objX,objY,groundY,objW){
-  let height=groundY-objY-objW; // distance above ground
+  let height=groundY-objY-objW;
   if(height<0) height=0;
-  let scale=objW*(1+height*0.005);
-  let alpha=Math.max(0,0.5-height*0.003);
+  let scale=objW*(1+height*0.008);
+  let alpha=Math.max(0,0.9-height*0.005);
+  let blurIdx=Math.min(10,Math.floor(height*0.1));
+  mesh.material=shadowMats[blurIdx];
+  mesh.material.opacity=alpha;
   mesh.scale.set(scale,scale,1);
   mesh.position.set(objX+objW/2,-(groundY-1),0);
-  mesh.material.opacity=alpha;
   mesh.visible=alpha>0.02;
 }
 
