@@ -90,10 +90,10 @@ function drawOverlay(){
   ox.textAlign='center';
   ox.shadowColor='#4ecdc4';
   ox.shadowBlur=12;
-  ox.font='bold 18px monospace';
-  let baseY=GH*0.38;
+  ox.font='bold 13px monospace';
+  let baseY=GH*0.25;
   for(let i=0;i<overlayMsg.lines.length;i++){
-    ox.fillText(overlayMsg.lines[i],GW/2,baseY+bobY+i*28);
+    ox.fillText(overlayMsg.lines[i],GW/2,baseY+bobY+i*22);
   }
   ox.restore();
 }
@@ -149,7 +149,7 @@ function buildLevel(stageOverride){
 
   if(stage==='intro'){
     // Intro: no coins, show tutorial
-    showOverlay(['HOLD DOWN','JUMP TO','JUMP HIGHER'],'#fff');
+    showOverlay(['HOLD LONGER = JUMP HIGHER','','PRESS AGAIN IN AIR','FOR A DOUBLE JUMP','','HOLD A 3RD TIME TO','STORE A LANDING JUMP'],'#fff');
   } else if(stage==='enemies'){
     // Enemy level: mega platform(s) with enemies
     // In 2D mode, generate multiple mega-platforms instead of scaling one
