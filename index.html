@@ -431,12 +431,17 @@ function makeShadow(){
   return m;
 }
 function updateShadow(mesh,objX,objY,groundY,objW){
+  // Only show shadow if object is above a platform
+  let onPlat=false;
+  let cx=objX+objW/2;
+  for(let p of S.platforms){if(cx>=p.x&&cx<=p.x+p.w){onPlat=true;groundY=p.y;break}}
+  if(!onPlat){mesh.visible=false;return}
   let height=groundY-objY-objW;
   if(height<0) height=0;
   let scale=Math.max(2,objW*0.5*(1-height*0.002));
   let alpha=Math.max(0,0.8-height*0.005);
   mesh.scale.set(scale,scale,1);
-  mesh.position.set(objX+objW/2,-(groundY-1),0);
+  mesh.position.set(cx,-(groundY)+CONFIG.platH/2+0.5,0);
   mesh.material.opacity=alpha;
   mesh.visible=alpha>0.02;
 }
