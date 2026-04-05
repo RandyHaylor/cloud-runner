@@ -158,8 +158,9 @@ function buildLevel(stageOverride){
     let megaW=GW*6+Math.random()*GW*2;
     let mp={x:last.x+last.w,y:last.y,w:megaW,h:CONFIG.platH,color:rc(),mesh:null};
     S.platforms.push(mp);
-    let n=2+Math.floor(Math.random()*2+d*2);
-    let margin=CONFIG.enemyMargin,usable=megaW-margin*2,sp=usable/(n+1);
+    let margin=CONFIG.enemyMargin,usable=megaW-margin*2;
+    let n=Math.max(2,Math.floor(usable/200)+Math.floor(d*2));
+    let sp=usable/(n+1);
     for(let e=0;e<n;e++){
       let jitter=(Math.random()-0.5)*sp*0.4;
       let ex=mp.x+margin+sp*(e+1)-11+jitter;
@@ -341,9 +342,9 @@ function update(){
   }
 
   // Cleanup offscreen + remove 3D meshes
-  S.platforms=S.platforms.filter(p=>{if(p.x+p.w<-50){if(p.mesh&&p.mesh.parent)scene.remove(p.mesh);return false}return true});
-  S.coins=S.coins.filter(c=>{if(c.x<-50){if(c.mesh&&c.mesh.parent)scene.remove(c.mesh);if(c.shadow&&c.shadow.parent)scene.remove(c.shadow);return false}return true});
-  S.enemies=S.enemies.filter(e=>{if(e.x<-50){if(e.mesh&&e.mesh.parent)scene.remove(e.mesh);if(e.shadow&&e.shadow.parent)scene.remove(e.shadow);return false}return true});
+  S.platforms=S.platforms.filter(p=>{if(p.x+p.w<-500){if(p.mesh&&p.mesh.parent)scene.remove(p.mesh);return false}return true});
+  S.coins=S.coins.filter(c=>{if(c.x<-500){if(c.mesh&&c.mesh.parent)scene.remove(c.mesh);if(c.shadow&&c.shadow.parent)scene.remove(c.shadow);return false}return true});
+  S.enemies=S.enemies.filter(e=>{if(e.x<-500){if(e.mesh&&e.mesh.parent)scene.remove(e.mesh);if(e.shadow&&e.shadow.parent)scene.remove(e.shadow);return false}return true});
 
   // HUD
   document.getElementById('scoreDisp').textContent='Score '+S.score;
