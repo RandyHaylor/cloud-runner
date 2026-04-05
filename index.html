@@ -214,7 +214,16 @@ function switchMode(){
   let l=S.stageNum;
   if(l<=1) S.mode='3d';
   else if(l%2===0) S.mode='2d';
-  else{S.mode='3d';S.tCamH=400+Math.random()*200;S.tCamA=0.9+Math.random()*0.5}
+  else{
+    S.mode='3d';
+    // Slight random variations from the base camera
+    S.tCamH=600;
+    S.tCamA=1.2;
+    S.camYOffset=(Math.random()-0.5)*80;   // slightly higher or lower
+    S.camLookYOffset=(Math.random()-0.5)*40; // look up or down a bit
+    S.camXOffset=(Math.random()-0.5)*60;   // slightly left/right
+    S.camZExtra=Math.random()*100;         // slightly farther back
+  }
   c2d.style.display=S.mode==='2d'?'block':'none';
   ren.domElement.style.display=S.mode==='3d'?'block':'none';
   document.getElementById('debug').textContent=S.mode.toUpperCase();
@@ -397,7 +406,8 @@ function draw3D(){
   if(!S.groundY) S.groundY=-S.player.y;
   if(S.player.onGround) S.groundY+=(-S.player.y-S.groundY)*0.05;
   let px=S.player.x,py=S.groundY;
-  camera.position.set(px+80,py+60,S.camH);camera.lookAt(px+150,py,0);
+  camera.position.set(px+80+S.camXOffset, py+60+S.camYOffset, S.camH+S.camZExtra);
+  camera.lookAt(px+150+S.camXOffset*0.5, py+S.camLookYOffset, 0);
   plight.position.set(px,-S.player.y+20,30);
   pmesh.position.set(px+14,-S.player.y-14,0);pmesh.rotation.z=S.player.vy*0.02;
 
@@ -445,6 +455,7 @@ function init(){
   S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.frame=0;
   S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;
   S.mode='3d';S.tCamH=600;S.tCamA=1.2;S.camH=600;S.camA=1.2;S.groundY=0;
+  S.camYOffset=0;S.camLookYOffset=0;S.camXOffset=0;S.camZExtra=0;
   document.getElementById('msg').style.display='none';
   document.getElementById('levelDisp').textContent='Get Ready';
   document.getElementById('scoreDisp').textContent='Score 0';
