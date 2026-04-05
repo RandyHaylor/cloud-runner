@@ -407,8 +407,8 @@ function makeGridTex(color){
   let cv=document.createElement('canvas');cv.width=64;cv.height=64;
   let gx=cv.getContext('2d');
   gx.fillStyle=color;gx.fillRect(0,0,64,64);
-  gx.strokeStyle='rgba(255,255,255,0.25)';gx.lineWidth=1;
-  for(let i=0;i<=64;i+=16){gx.beginPath();gx.moveTo(i,0);gx.lineTo(i,64);gx.stroke();gx.beginPath();gx.moveTo(0,i);gx.lineTo(64,i);gx.stroke()}
+  gx.strokeStyle='rgba(255,255,255,0.7)';gx.lineWidth=2;
+  for(let i=0;i<=64;i+=32){gx.beginPath();gx.moveTo(i,0);gx.lineTo(i,64);gx.stroke();gx.beginPath();gx.moveTo(0,i);gx.lineTo(64,i);gx.stroke()}
   let tex=new THREE.CanvasTexture(cv);
   tex.wrapS=THREE.RepeatWrapping;tex.wrapT=THREE.RepeatWrapping;
   return tex;
