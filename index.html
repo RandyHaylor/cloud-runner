@@ -9,7 +9,8 @@
 body{background:#000;overflow:hidden;touch-action:none;display:flex;justify-content:center;align-items:flex-start;padding-top:env(safe-area-inset-top,10px);height:100dvh}
 #game-container{position:relative;width:400px;height:711px;overflow:hidden;background:#1a1a2e;border-radius:8px}
 canvas{display:block;position:absolute;top:0;left:0;z-index:0}
-#jump{position:absolute;bottom:80px;left:50%;transform:translateX(-50%);width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);color:#fff;font-size:24px;cursor:pointer;z-index:100;-webkit-tap-highlight-color:transparent}
+#jump{position:absolute;bottom:80px;right:60px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);color:#fff;font-size:24px;cursor:pointer;z-index:100;-webkit-tap-highlight-color:transparent}
+#pause{position:absolute;bottom:80px;left:60px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.15);border:3px solid rgba(255,255,255,0.3);color:#fff;font-size:28px;cursor:pointer;z-index:100;-webkit-tap-highlight-color:transparent}
 #hud{position:absolute;top:40px;right:15px;color:#fff;font:bold 18px monospace;z-index:100;text-align:right;text-shadow:0 0 8px rgba(0,0,0,0.8)}
 #msg{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font:bold 28px monospace;z-index:100;display:none;text-align:center}
 #debug{position:absolute;top:40px;left:10px;color:rgba(255,255,255,0.6);font:12px monospace;z-index:100}
@@ -24,6 +25,7 @@ canvas{display:block;position:absolute;top:0;left:0;z-index:0}
   </div>
   <div id="debug" style="display:none"></div>
   <div id="msg"></div>
+  <button id="pause">| |</button>
   <button id="jump">JUMP</button>
   <canvas id="canvas2d"></canvas>
   <canvas id="overlay" style="z-index:50;pointer-events:none"></canvas>
@@ -130,7 +132,7 @@ function buildLevel(stageOverride){
 
   // Every level starts with a wide safe platform (2 screens)
   let safeW=GW*2;
-  let ny=Math.max(GH*0.35,Math.min(GH*0.8,last.y));
+  let ny=Math.max(GH*0.35,Math.min(GH*0.72,last.y));
   let safe={x:last.x+last.w,y:ny,w:safeW,h:CONFIG.platH,color:rc(),mesh:null};
   S.platforms.push(safe);
   if(stage!=='intro'){
@@ -174,7 +176,7 @@ function buildLevel(stageOverride){
       let mg=maxGap();
       let gap=50+d*(mg-50)+Math.random()*20;
       let pny=last.y+(Math.random()*40-20);
-      pny=Math.max(GH*0.35,Math.min(GH*0.8,pny));
+      pny=Math.max(GH*0.35,Math.min(GH*0.72,pny));
       let nw=130+Math.random()*80;
       let np={x:last.x+last.w+gap,y:pny,w:nw,h:CONFIG.platH,color:rc(),mesh:null};
       S.platforms.push(np);
@@ -185,7 +187,7 @@ function buildLevel(stageOverride){
 
   // Level-end marker: dark platform, triggers level switch when player reaches it
   let endW=GW*1.5;
-  let endY=Math.max(GH*0.35,Math.min(GH*0.8,last.y));
+  let endY=Math.max(GH*0.35,Math.min(GH*0.72,last.y));
   let gap=stage==='gaps'?80:0;
   S.platforms.push({x:last.x+last.w+gap,y:endY,w:endW,h:CONFIG.platH,color:'#1a1a2e',mesh:null,levelEnd:true,fired:false});
 }
@@ -206,7 +208,14 @@ function jEnd(){
   if(S.jumping&&S.player.vy<CONFIG.jumpCutoff) S.player.vy=CONFIG.jumpCutoff;
   S.jumping=false;
 }
+function togglePause(){
+  S.paused=!S.paused;
+  document.getElementById('pause').textContent=S.paused?'▶':'| |';
+}
+
 function setupInput(){
+  document.getElementById('pause').addEventListener('click',togglePause);
+  document.getElementById('pause').addEventListener('touchstart',e=>{e.preventDefault();togglePause()});
   let b=document.getElementById('jump');
   b.addEventListener('mousedown',jStart);b.addEventListener('mouseup',jEnd);b.addEventListener('mouseleave',jEnd);
   b.addEventListener('touchstart',e=>{e.preventDefault();jStart()});b.addEventListener('touchend',e=>{e.preventDefault();jEnd()});
@@ -382,7 +391,7 @@ function draw2D(){
 // 3D SETUP & RENDERER
 // ============================================================
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(60,GW/GH,1,8000);
+const camera=new THREE.PerspectiveCamera(45,GW/GH,1,8000);
 const ren=new THREE.WebGLRenderer({antialias:true});
 ren.setSize(GW,GH);ren.setPixelRatio(window.devicePixelRatio);
 ren.domElement.style.position='absolute';ren.domElement.style.top='0';ren.domElement.style.left='0';ren.domElement.style.zIndex='0';
@@ -519,7 +528,7 @@ function init(){
   S.player={x:GW*0.3,y:0,vy:0,w:CONFIG.playerW,h:CONFIG.playerH,onGround:false,gndY:GH*0.7};
   S.platforms=[];S.coins=[];S.enemies=[];S.particles=[];S.floats=[];
   S.score=0;S.coinCount=0;S.speed=CONFIG.baseSpeed;S.over=false;S.frame=0;
-  S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;
+  S.stage='intro';S.stageNum=0;S.jumping=false;S.held=false;S.paused=false;
   S.mode='3d';S.tCamH=600;S.tCamA=1.2;S.camH=600;S.camA=1.2;S.groundY=0;
   S.camYOffset=0;S.camLookYOffset=0;S.camXOffset=0;S.camZExtra=0;
   document.getElementById('msg').style.display='none';
@@ -538,7 +547,7 @@ function init(){
 }
 
 function loop(){
-  if(!S.over) update();
+  if(!S.over&&!S.paused) update();
   if(S.mode==='3d') draw3D(); else draw2D();
   drawOverlay();
   requestAnimationFrame(loop);
