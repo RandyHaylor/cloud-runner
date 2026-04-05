@@ -243,7 +243,10 @@ function switchMode(){
     S.camXOffset=(Math.random()-0.5)*60;
     S.camZExtra=Math.random()*100;
   }
-  c2d.style.display=S.mode==='2d'?'block':'none';
+  // 2D canvas always visible (full scene in 2D mode, overlay for text/particles in 3D)
+  c2d.style.display='block';
+  c2d.style.zIndex=S.mode==='2d'?'0':'2';
+  c2d.style.pointerEvents=S.mode==='2d'?'auto':'none';
   ren.domElement.style.display=S.mode==='3d'?'block':'none';
   document.getElementById('debug').textContent=S.mode.toUpperCase();
 }
@@ -511,8 +514,10 @@ function draw3D(){
   }
 
   ren.render(scene,camera);
-  // Float text overlay
+  // 2D overlay: particles + float text on transparent canvas
   ctx.clearRect(0,0,GW,GH);
+  for(let p of S.particles){ctx.globalAlpha=p.life/20;ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,p.sz,p.sz)}
+  ctx.globalAlpha=1;
   for(let f of S.floats){ctx.globalAlpha=f.life/40;ctx.fillStyle=f.color;ctx.font='bold 14px monospace';ctx.fillText(f.text,f.x,f.y)}
   ctx.globalAlpha=1;
 }
