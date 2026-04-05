@@ -433,7 +433,7 @@ function makeShadow(){
 function updateShadow(mesh,objX,objY,groundY,objW){
   let height=groundY-objY-objW;
   if(height<0) height=0;
-  let scale=Math.max(2,objW*(1-height*0.004));
+  let scale=Math.max(2,objW*0.5*(1-height*0.002));
   let alpha=Math.max(0,0.8-height*0.005);
   mesh.scale.set(scale,scale,1);
   mesh.position.set(objX+objW/2,-(groundY-1),0);
@@ -455,8 +455,8 @@ function draw3D(){
   if(S.player.onGround) S.groundY+=(-S.player.y-S.groundY)*0.05;
   let px=S.player.x,py=S.groundY;
   // Over-the-shoulder: tight behind player, nearly straight ahead
-  camera.position.set(px-180+S.camXOffset, py+50+S.camYOffset, 65+S.camZExtra);
-  camera.lookAt(px+350+S.camXOffset*0.5, py-10+S.camLookYOffset, 0);
+  camera.position.set(px-200+S.camXOffset, py+80+S.camYOffset, 90+S.camZExtra);
+  camera.lookAt(px+300+S.camXOffset*0.5, py-30+S.camLookYOffset, 0);
   plight.position.set(px+200,200,300);
   pmesh.position.set(px+14,-S.player.y-14,0);pmesh.rotation.z=S.player.vy*0.02;
 
