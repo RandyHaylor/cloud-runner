@@ -679,14 +679,14 @@ function makeDemoSequence(){
     // Normal jump: varied hold from quick tap to long squish
     seq.push({hold:Math.round(2+Math.random()*FC*2), wait:0});
   } else if(type===1){
-    // Double jump
+    // Double jump: first jump 0.75-1.5x, then press again almost immediately, hold 0.5-1x, release
     seq.push({hold:Math.round(FC*(0.75+Math.random()*0.75)), wait:0});
-    seq.push({hold:Math.round(FC*Math.random()*0.5), wait:2+Math.round(Math.random()*4)});
+    seq.push({hold:Math.round(FC*(0.5+Math.random()*0.5)), wait:1+Math.round(Math.random()*2)});
   } else {
-    // Stored charge (triple)
+    // Stored charge (triple): same as double, then quick press for stored
     seq.push({hold:Math.round(FC*(0.75+Math.random()*0.75)), wait:0});
-    seq.push({hold:Math.round(FC*Math.random()*0.5), wait:2+Math.round(Math.random()*4)});
-    seq.push({hold:Math.round(FC*(0.25+Math.random()*0.75)), wait:2+Math.round(Math.random()*3)});
+    seq.push({hold:Math.round(FC*(0.5+Math.random()*0.5)), wait:1+Math.round(Math.random()*2)});
+    seq.push({hold:Math.round(FC*(0.25+Math.random()*0.75)), wait:1+Math.round(Math.random()*2)});
   }
   return seq;
 }
@@ -696,10 +696,10 @@ function makeDemoGroup(){
   let groupSize=1+Math.floor(Math.random()*3); // 1, 2, or 3 sequences
   let group=[];
   for(let i=0;i<groupSize;i++){
-    if(i>0) group.push({type:'rest',frames:15+Math.round(Math.random()*20)}); // short pause between grouped jumps
+    if(i>0) group.push({type:'rest',frames:30+Math.round(Math.random()*30)}); // pause between grouped jumps
     group.push({type:'seq',seq:makeDemoSequence()});
   }
-  group.push({type:'rest',frames:40+Math.round(Math.random()*50)}); // longer rest after group
+  group.push({type:'rest',frames:60+Math.round(Math.random()*60)}); // longer rest after group
   return group;
 }
 
