@@ -75,15 +75,14 @@ function drawOverlay(){
   ox.clearRect(0,0,GW,GH);
   if(!overlayMsg) return;
   let t=performance.now()*0.001;
-  // Simulate low jump then high jump: 4 second cycle
-  // 0-1s: small bob up (30px), 1-2s: back to base
-  // 2-3s: big bob up (70px), 3-4s: back to base
-  let cycle=t%4;
+  // Bob: fixed base, up small, back to base, up double, back to base
+  // Smooth triangle wave motion, not a jump arc
+  let cycle=t%3;
   let bobY=0;
-  if(cycle<1) bobY=-30*Math.sin(cycle*Math.PI);
-  else if(cycle<2) bobY=0;
-  else if(cycle<3) bobY=-70*Math.sin((cycle-2)*Math.PI);
-  else bobY=0;
+  if(cycle<0.75) bobY=-20*(cycle/0.75);        // rise small
+  else if(cycle<1.5) bobY=-20*(1-(cycle-0.75)/0.75); // back to base
+  else if(cycle<2.25) bobY=-40*((cycle-1.5)/0.75);   // rise big
+  else bobY=-40*(1-(cycle-2.25)/0.75);                // back to base
 
   ox.save();
   ox.fillStyle=overlayMsg.color;
