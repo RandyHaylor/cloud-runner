@@ -90,10 +90,19 @@ function drawOverlay(){
   ox.textAlign='center';
   ox.shadowColor='#4ecdc4';
   ox.shadowBlur=12;
-  ox.font='bold 12px monospace';
-  let baseY=GH*0.18;
+  ox.font='bold 11px monospace';
+  let baseY=GH*0.22;
   for(let i=0;i<overlayMsg.lines.length;i++){
-    ox.fillText(overlayMsg.lines[i],GW/2,baseY+bobY+i*18);
+    // Word wrap each line within game width
+    let words=overlayMsg.lines[i].split(' '),line='',ly=0;
+    for(let w of words){
+      let test=line?line+' '+w:w;
+      if(ox.measureText(test).width>GW-40){
+        ox.fillText(line,GW/2,baseY+bobY);baseY+=16;line=w;
+      } else line=test;
+    }
+    if(line){ox.fillText(line,GW/2,baseY+bobY);baseY+=28;}
+  }
   }
   ox.restore();
 }
@@ -149,7 +158,7 @@ function buildLevel(stageOverride){
 
   if(stage==='intro'){
     // Intro: no coins, show tutorial
-    showOverlay(['HOLD JUMP LONGER','TO JUMP HIGHER','','IMMEDIATELY HOLD AND','RELEASE JUMP AGAIN','IN THE AIR','','HOLD A THIRD TIME','BEFORE FALLING TO STORE','JUMP FOR WHEN YOU','HIT THE GROUND'],'#fff');
+    showOverlay(['Hold jump longer to jump higher','Immediately hold and release jump again in the air','Hold a third time before falling to store jump for when you hit the ground'],'#fff');
   } else if(stage==='enemies'){
     // Enemy level: mega platform(s) with enemies
     // In 2D mode, generate multiple mega-platforms instead of scaling one
