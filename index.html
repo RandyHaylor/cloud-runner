@@ -571,7 +571,7 @@ function draw3D(){
   ren.render(scene,camera);
   // 2D overlay: float text only (particles don't map to 3D coordinates)
   ctx.clearRect(0,0,GW,GH);
-  for(let f of S.floats){ctx.globalAlpha=f.life/40;ctx.fillStyle=f.color;ctx.font='bold 28px monospace';ctx.fillText(f.text,f.x,f.y-30)}
+  for(let f of S.floats){ctx.globalAlpha=f.life/40;ctx.fillStyle=f.color;ctx.font='bold 28px monospace';ctx.fillText(f.text,f.x,f.y-86)}
   ctx.globalAlpha=1;
 }
 
